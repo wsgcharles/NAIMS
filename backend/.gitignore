@@ -1,0 +1,27 @@
+# Visual Studio
+.vs/
+bin/
+obj/
+
+# Rider
+.idea/
+
+# User files
+*.user
+*.suo
+
+# Logs
+*.log
+
+# ASP.NET
+appsettings.Development.json
+
+# Node
+node_modules/
+
+# Environment
+.env
+
+# OS
+.DS_Store
+Thumbs.db
