@@ -52,8 +52,8 @@ public class ParentWelcomeEmailViewModel : BaseEmailViewModel
 public class PasswordResetEmailViewModel : BaseEmailViewModel
 {
     public string RecipientName { get; set; } = string.Empty;
-    public string ResetLink { get; set; } = string.Empty;
-    public int ExpirationMinutes { get; set; } = 30;
+    public string VerificationCode { get; set; } = string.Empty;
+    public int ExpirationMinutes { get; set; } = 15;
 }
 
 public class PaymentReceiptEmailViewModel : BaseEmailViewModel

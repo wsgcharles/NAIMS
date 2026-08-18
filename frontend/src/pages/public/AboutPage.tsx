@@ -1,224 +1,147 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Award, ShieldCheck, Users, Heart, BookOpen, ArrowRight } from 'lucide-react';
+import { Heart, Award, BookOpen } from 'lucide-react';
 
-// ─── Section Helpers ──────────────────────────────────────────────────────
-const PageHero: React.FC<{
-  label: string;
-  labelColor?: string;
-  title: string;
-  desc: string;
-}> = ({ label, labelColor = 'text-blue-400', title, desc }) => (
-  <div className="relative text-center space-y-5 max-w-3xl mx-auto">
-    {/* Glow */}
-    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 bg-blue-600/8 rounded-full blur-3xl pointer-events-none" />
-    <span className={`relative text-[11px] font-bold uppercase tracking-[0.18em] ${labelColor}`}>
-      {label}
-    </span>
-    <h1 className="relative text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-      {title}
-    </h1>
-    <p className="relative text-slate-400 text-sm leading-relaxed">{desc}</p>
-  </div>
-);
+const facilities = [
+  {
+    title: 'Main Campus Gate & Entrance',
+    desc: 'Secure entrance gates with 24/7 campus security personnel at 31 DBP Avenue, Arca South, Taguig City.',
+    image: '/images/campus/entrance.jpg',
+  },
+  {
+    title: 'Main Academic Building',
+    desc: 'Spacious multistory learning facilities housing Grade 1 through Grade 12 classrooms at Arca South.',
+    image: '/images/campus/building.jpg',
+  },
+  {
+    title: 'Air-Conditioned Learning Classrooms',
+    desc: 'Equipped with multimedia projectors, ergonomic seating, and conducive study layouts.',
+    image: '/images/campus/classrooms.jpg',
+  },
+  {
+    title: 'ICT Support & Computer Laboratory',
+    desc: 'High-speed computer workstations for IT practicals, web development, and NAISIS orientation.',
+    image: '/images/campus/computer-lab.jpg',
+  },
+  {
+    title: 'Institutional Resource Library',
+    desc: 'Digital reference catalog, research quiet halls, and comprehensive learning materials.',
+    image: '/images/campus/library.jpg',
+  },
+  {
+    title: 'Covered Athletic Court & Quadrangle',
+    desc: 'Multi-purpose court for sports intramurals, physical education, and institutional assemblies.',
+    image: '/images/campus/covered-court.jpg',
+  },
+];
 
-const ValueCard: React.FC<{
-  icon: React.ElementType;
-  title: string;
-  desc: string;
-  accent?: string;
-}> = ({ icon: Icon, title, desc, accent = 'blue' }) => {
-  const colorMap: Record<string, string> = {
-    blue: 'text-blue-400 bg-blue-500/10',
-    emerald: 'text-emerald-400 bg-emerald-500/10',
-    purple: 'text-purple-400 bg-purple-500/10',
-    amber: 'text-amber-400 bg-amber-500/10',
-  };
-  return (
-    <div className="group p-8 bg-slate-900 border border-slate-800 rounded-3xl space-y-4 hover:border-slate-700 hover:-translate-y-0.5 transition-all duration-300">
-      <div
-        className={`w-12 h-12 rounded-2xl flex items-center justify-center ${colorMap[accent] ?? colorMap.blue}`}
-      >
-        <Icon className="w-6 h-6" />
-      </div>
-      <h3 className="text-lg font-bold text-white group-hover:text-blue-300 transition-colors">
-        {title}
-      </h3>
-      <p className="text-xs text-slate-400 leading-relaxed">{desc}</p>
-    </div>
-  );
-};
+const milestones = [
+  { year: '2002', event: 'Noah\'s Academy Incorporated founded in Taguig City, Metro Manila.' },
+  { year: '2008', event: 'Junior High School program expanded with modernized academic facilities.' },
+  { year: '2015', event: 'Senior High School tracks (ASSH, BE, ICT Support, Hospitality & Tourism) DepEd accredited.' },
+  { year: '2022', event: 'Arca South Campus facility integration & NAISIS digital platform launch.' },
+  { year: '2026', event: 'Enrollment reaches over 2,400 active learners across Grade 1 to Grade 12.' },
+];
 
 export const AboutPage: React.FC = () => {
-  const coreValues = [
-    {
-      icon: Award,
-      title: 'Academic Rigor',
-      desc: 'Fostering deep inquiry, critical problem-solving, and continuous cognitive growth across all grade levels.',
-      accent: 'blue',
-    },
-    {
-      icon: ShieldCheck,
-      title: 'Character & Integrity',
-      desc: 'Instilling ethical values, personal accountability, and principled community leadership.',
-      accent: 'emerald',
-    },
-    {
-      icon: Users,
-      title: 'Inclusive Community',
-      desc: "Creating a safe, affirming environment where every learner's background is celebrated.",
-      accent: 'purple',
-    },
-    {
-      icon: Heart,
-      title: 'Holistic Wellness',
-      desc: 'Nurturing mental, physical, and emotional health as foundational pillars of student success.',
-      accent: 'amber',
-    },
-  ];
-
-  const leadership = [
-    {
-      name: 'Dr. Robert Vance',
-      role: 'School Principal',
-      degree: 'Ph.D. Educational Leadership',
-      color: 'bg-blue-600/20 text-blue-400',
-    },
-    {
-      name: 'Prof. Clara Higgins',
-      role: 'Vice Principal, Academic Affairs',
-      degree: 'M.Ed. Curriculum Design',
-      color: 'bg-purple-600/20 text-purple-400',
-    },
-    {
-      name: 'Marcus Sterling',
-      role: 'Head Registrar & Administrator',
-      degree: 'M.S. Information Systems',
-      color: 'bg-emerald-600/20 text-emerald-400',
-    },
-  ];
-
-  const milestones = [
-    { year: '2001', event: 'Noah\'s Academy founded with 3 classrooms and 48 students.' },
-    { year: '2008', event: 'Junior High program launched; campus expanded to 2 hectares.' },
-    { year: '2015', event: 'Senior High STEM and ABM tracks accredited by DepEd.' },
-    { year: '2022', event: 'EduCore digital management platform deployed across all departments.' },
-    { year: '2026', event: 'Enrollment surpasses 2,480 students. AI-Lab inaugurated.' },
-  ];
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
-      {/* Hero */}
-      <PageHero
-        label="About Noah's Academy"
-        title="Nurturing Minds, Inspiring Excellence"
-        desc="Discover the history, leadership, and educational core values driving Noah's Academy forward — a 25-year legacy of transformative education."
-      />
-
-      {/* Core Values */}
-      <section>
-        <div className="text-center mb-12">
-          <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-400">
-            Our Foundation
+    <div className="bg-[#FAF8FF] min-h-screen text-slate-900 py-12 lg:py-16 font-sans">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20">
+        {/* Hero */}
+        <div className="text-center space-y-4 max-w-3xl mx-auto">
+          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-purple-700">
+            About Noah's Academy Incorporated – Arca South
           </span>
-          <h2 className="mt-2 text-3xl font-bold text-white">Core Values & Principles</h2>
+          <h1 className="text-3xl sm:text-5xl font-black text-purple-950 tracking-tight">
+            Excellence in Education, Virtue in Character
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+            Noah's Academy Incorporated – Arca South Campus provides quality basic education in Taguig City while nurturing academic excellence, leadership, and Christian values. Located at 31 DBP Avenue, Arca South, we foster intellectual curiosity, moral integrity, and holistic personal growth.
+          </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {coreValues.map((v) => (
-            <ValueCard key={v.title} {...v} />
-          ))}
-        </div>
-      </section>
 
-      {/* Institutional History — Timeline */}
-      <section>
-        <div className="text-center mb-12">
-          <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-400">
-            Our Journey
-          </span>
-          <h2 className="mt-2 text-3xl font-bold text-white">25 Years of Impact</h2>
+        {/* Mission, Vision, Values */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-white border border-purple-100 rounded-3xl p-8 shadow-xs space-y-4">
+            <div className="p-3.5 bg-purple-100 text-purple-700 rounded-2xl w-12 h-12 flex items-center justify-center font-black">
+              <Award className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-extrabold text-purple-950">Our Mission</h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+              To provide accessible, quality basic education from Grade 1 through Senior High School, fostering intellectual curiosity, ethical leadership, and practical life skills.
+            </p>
+          </div>
+
+          <div className="bg-white border border-purple-100 rounded-3xl p-8 shadow-xs space-y-4">
+            <div className="p-3.5 bg-purple-100 text-purple-700 rounded-2xl w-12 h-12 flex items-center justify-center font-black">
+              <BookOpen className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-extrabold text-purple-950">Our Vision</h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+              To be a leading private educational institution in Taguig City recognized for holistic character formation, academic excellence, and university readiness.
+            </p>
+          </div>
+
+          <div className="bg-white border border-purple-100 rounded-3xl p-8 shadow-xs space-y-4">
+            <div className="p-3.5 bg-purple-100 text-purple-700 rounded-2xl w-12 h-12 flex items-center justify-center font-black">
+              <Heart className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-extrabold text-purple-950">Core Values</h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+              Integrity, Discipline, Academic Mastery, Respect, and Service to God and Country.
+            </p>
+          </div>
         </div>
-        <div className="relative max-w-3xl mx-auto">
-          {/* Vertical line */}
-          <div className="absolute left-4 sm:left-1/2 sm:-translate-x-px top-0 bottom-0 w-px bg-slate-800" />
-          <div className="space-y-10">
-            {milestones.map((m, i) => (
-              <div
-                key={m.year}
-                className={`relative flex items-start gap-6 ${
-                  i % 2 === 0 ? 'sm:flex-row' : 'sm:flex-row-reverse'
-                }`}
-              >
-                {/* Dot */}
-                <div className="absolute left-4 sm:left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-blue-500 ring-4 ring-slate-950 mt-1.5" />
-                {/* Content */}
-                <div
-                  className={`ml-12 sm:ml-0 sm:w-[calc(50%-2rem)] p-5 bg-slate-900 border border-slate-800 rounded-2xl hover:border-slate-700 transition-colors ${
-                    i % 2 === 0 ? 'sm:mr-8' : 'sm:ml-8'
-                  }`}
-                >
-                  <span className="text-xs font-bold text-blue-400 font-mono">{m.year}</span>
-                  <p className="mt-1 text-sm text-slate-300 leading-relaxed">{m.event}</p>
+
+        {/* Official Campus Facilities Showcase */}
+        <div className="space-y-8">
+          <div className="text-center space-y-2 max-w-2xl mx-auto">
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-purple-700">Arca South Environment</span>
+            <h2 className="text-2xl sm:text-3xl font-black text-purple-950">Arca South Campus Facilities</h2>
+            <p className="text-xs text-slate-600">Take a visual tour of our facilities at 31 DBP Avenue, Arca South, Taguig City.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {facilities.map((fac, idx) => (
+              <div key={idx} className="bg-white border border-purple-100 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all group">
+                <div className="h-52 overflow-hidden bg-purple-950 relative">
+                  <img
+                    src={fac.image}
+                    alt={fac.title}
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-4 left-4 px-3 py-1 bg-amber-400 text-purple-950 font-black text-[10px] uppercase tracking-wider rounded-full">
+                    Facility
+                  </div>
+                </div>
+                <div className="p-6 space-y-2">
+                  <h3 className="font-extrabold text-base text-purple-950">{fac.title}</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">{fac.desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </section>
 
-      {/* Leadership Team */}
-      <section>
-        <div className="text-center mb-12">
-          <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-purple-400">
-            Our Leaders
-          </span>
-          <h2 className="mt-2 text-3xl font-bold text-white">Institutional Leadership</h2>
-          <p className="text-slate-400 text-sm mt-3">
-            Dedicated administrators guiding Noah's Academy toward excellence.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {leadership.map((m) => (
-            <div
-              key={m.name}
-              className="group p-6 bg-slate-900 border border-slate-800 rounded-3xl text-center space-y-4 hover:border-slate-700 hover:-translate-y-0.5 transition-all duration-300"
-            >
-              <div
-                className={`w-20 h-20 rounded-full mx-auto flex items-center justify-center text-2xl font-extrabold ${m.color}`}
-              >
-                {m.name[0]}
-              </div>
-              <div>
-                <h4 className="font-bold text-white text-sm group-hover:text-blue-300 transition-colors">
-                  {m.name}
-                </h4>
-                <p className="text-xs text-blue-400 font-semibold mt-1">{m.role}</p>
-                <p className="text-[11px] text-slate-500 mt-1">{m.degree}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+        {/* Milestone Timeline */}
+        <div className="bg-white border border-purple-100 rounded-3xl p-8 lg:p-12 shadow-sm space-y-8">
+          <div className="text-center space-y-2">
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-purple-700">Our Journey</span>
+            <h2 className="text-2xl sm:text-3xl font-black text-purple-950">Institutional Milestones</h2>
+          </div>
 
-      {/* CTA Strip */}
-      <section className="text-center">
-        <div className="inline-flex flex-col sm:flex-row items-center gap-4">
-          <Link
-            to="/admissions"
-            className="inline-flex items-center gap-2 px-7 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-500/20"
-          >
-            <span>Start Your Application</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link
-            to="/academics"
-            className="inline-flex items-center gap-2 px-7 py-3 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 font-bold rounded-xl text-sm transition-all"
-          >
-            <BookOpen className="w-4 h-4 text-emerald-400" />
-            <span>Explore Academics</span>
-          </Link>
+          <div className="space-y-4 max-w-3xl mx-auto">
+            {milestones.map((m, idx) => (
+              <div key={idx} className="flex items-center space-x-4 p-4 bg-purple-50/60 rounded-2xl border border-purple-100">
+                <span className="px-4 py-2 bg-purple-700 text-white font-mono font-black text-xs rounded-xl shrink-0">
+                  {m.year}
+                </span>
+                <span className="text-xs font-semibold text-purple-950">{m.event}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 };

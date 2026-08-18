@@ -1,21 +1,18 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PublicLayout } from '../layouts/PublicLayout';
 import { LandingPage } from '../pages/public/LandingPage';
 import { AboutPage } from '../pages/public/AboutPage';
 import { AcademicsPage } from '../pages/public/AcademicsPage';
 import { AdmissionsPage } from '../pages/public/AdmissionsPage';
 import { ApplicationWizardPage } from '../pages/public/ApplicationWizardPage';
+import { ApplicationTrackingPage } from '../pages/public/ApplicationTrackingPage';
 import { NewsPage } from '../pages/public/NewsPage';
 import { EventsPage } from '../pages/public/EventsPage';
 import { GalleryPage } from '../pages/public/GalleryPage';
 import { ContactPage } from '../pages/public/ContactPage';
 
 import { LoginPage } from '../pages/auth/LoginPage';
-import { PortalSelectionPage } from '../pages/auth/PortalSelectionPage';
-import { StudentLoginPage } from '../pages/auth/StudentLoginPage';
-import { ParentLoginPage } from '../pages/auth/ParentLoginPage';
-import { EmployeeLoginPage } from '../pages/auth/EmployeeLoginPage';
 import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
 
@@ -28,14 +25,19 @@ import { TeacherManagementPage } from '../pages/admin/TeacherManagementPage';
 import { EmployeeManagementPage } from '../pages/admin/EmployeeManagementPage';
 import { SubjectManagementPage } from '../pages/admin/SubjectManagementPage';
 import { FinanceManagementPage } from '../pages/admin/FinanceManagementPage';
+import { AccountingQueuePage } from '../pages/admin/AccountingQueuePage';
 import { SystemSettingsPage } from '../pages/admin/SystemSettingsPage';
 import { AdmissionSettingsPage } from '../pages/admin/AdmissionSettingsPage';
+import { SchoolYearManagementPage } from '../pages/admin/SchoolYearManagementPage';
 import { GradeManagementPage } from '../pages/admin/GradeManagementPage';
+import { GradeApprovalPage } from '../pages/admin/GradeApprovalPage';
 import { AuditLogsPage } from '../pages/admin/AuditLogsPage';
 import { ReportsAnalyticsPage } from '../pages/admin/ReportsAnalyticsPage';
 import { RolesPermissionsPage } from '../pages/admin/RolesPermissionsPage';
 import { AnnouncementsPage } from '../pages/admin/AnnouncementsPage';
 import { SectionAllocationsPage } from '../pages/admin/SectionAllocationsPage';
+import { SectionManagementPage } from '../pages/admin/SectionManagementPage';
+
 
 import { RegistrarDashboard } from '../pages/registrar/RegistrarDashboard';
 import { EnrollmentManagementPage } from '../pages/registrar/EnrollmentManagementPage';
@@ -66,6 +68,7 @@ export const AppRouter: React.FC = () => {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/academics" element={<AcademicsPage />} />
             <Route path="/admissions" element={<AdmissionsPage />} />
+            <Route path="/admissions/track" element={<ApplicationTrackingPage />} />
             <Route path="/news" element={<NewsPage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/gallery" element={<GalleryPage />} />
@@ -79,14 +82,16 @@ export const AppRouter: React.FC = () => {
           <Route path="/applicant" element={<ApplicantPortalDashboard />} />
           <Route path="/applicant/dashboard" element={<ApplicantPortalDashboard />} />
 
-          {/* Dedicated Portal Selection & Authentication Screens */}
-          <Route path="/portal" element={<PortalSelectionPage />} />
+          {/* Unified Authentication — all roles use one login page */}
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/student/login" element={<StudentLoginPage />} />
-          <Route path="/parent/login" element={<ParentLoginPage />} />
-          <Route path="/employee/login" element={<EmployeeLoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+          {/* Legacy portal routes — redirect to unified login */}
+          <Route path="/portal" element={<Navigate to="/login" replace />} />
+          <Route path="/student/login" element={<Navigate to="/login" replace />} />
+          <Route path="/parent/login" element={<Navigate to="/login" replace />} />
+          <Route path="/employee/login" element={<Navigate to="/login" replace />} />
           <Route path="/403" element={<ForbiddenPage />} />
 
           {/* Authenticated Enterprise Portal Experience */}
@@ -147,6 +152,14 @@ export const AppRouter: React.FC = () => {
               }
             />
             <Route
+              path="/admin/grade-approvals"
+              element={
+                <RoleGuard allowedRoles={['SuperAdministrator', 'Administrator', 'Principal', 'Registrar']}>
+                  <GradeApprovalPage />
+                </RoleGuard>
+              }
+            />
+            <Route
               path="/admin/accounting"
               element={
                 <RoleGuard allowedRoles={['SuperAdministrator', 'Administrator', 'Accountant']}>
@@ -155,9 +168,17 @@ export const AppRouter: React.FC = () => {
               }
             />
             <Route
+              path="/accounting/queue"
+              element={
+                <RoleGuard allowedRoles={['SuperAdministrator', 'Administrator', 'Accountant']}>
+                  <AccountingQueuePage />
+                </RoleGuard>
+              }
+            />
+            <Route
               path="/admin/reports"
               element={
-                <RoleGuard allowedRoles={['SuperAdministrator', 'Administrator', 'Principal', 'Registrar']}>
+                <RoleGuard allowedRoles={['SuperAdministrator', 'Administrator', 'Principal', 'Registrar', 'Accountant']}>
                   <ReportsAnalyticsPage />
                 </RoleGuard>
               }
@@ -195,6 +216,14 @@ export const AppRouter: React.FC = () => {
               }
             />
             <Route
+              path="/admin/school-years"
+              element={
+                <RoleGuard allowedRoles={['SuperAdministrator', 'Administrator', 'Registrar']}>
+                  <SchoolYearManagementPage />
+                </RoleGuard>
+              }
+            />
+            <Route
               path="/admin/admissions-settings"
               element={
                 <RoleGuard allowedRoles={['SuperAdministrator', 'Administrator']}>
@@ -210,6 +239,15 @@ export const AppRouter: React.FC = () => {
                 </RoleGuard>
               }
             />
+            <Route
+              path="/admin/section-management"
+              element={
+                <RoleGuard allowedRoles={['SuperAdministrator', 'Administrator', 'Registrar']}>
+                  <SectionManagementPage />
+                </RoleGuard>
+              }
+            />
+
 
             {/* Registrar Module */}
             <Route

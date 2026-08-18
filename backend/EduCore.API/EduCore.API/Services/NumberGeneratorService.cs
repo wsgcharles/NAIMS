@@ -1,4 +1,4 @@
-﻿using EduCore.API.Data;
+using EduCore.API.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduCore.API.Services;
@@ -14,26 +14,33 @@ public class NumberGeneratorService
 
     public async Task<string> GenerateEmployeeNumberAsync()
     {
-        var count = await _context.Employees.CountAsync() + 1;
-
-        return $"NAI-{count:D3}";
+        // Use MAX(Id) instead of COUNT() to prevent duplicates when records are deleted
+        var maxId = await _context.Employees.MaxAsync(e => (int?)e.Id) ?? 0;
+        var seq = maxId + 1;
+        return $"NAI-{seq:D3}";
     }
 
     public async Task<string> GenerateStudentNumberAsync()
     {
-        var year = DateTime.Now.Year;
+        var setting = await _context.SchoolSettings.FirstOrDefaultAsync();
+        var prefix = string.IsNullOrWhiteSpace(setting?.StudentNumberPrefix) ? "NAI" : setting.StudentNumberPrefix.TrimEnd('-');
+        var counterLen = (setting?.StudentNumberCounterLength > 0) ? setting.StudentNumberCounterLength : 6;
 
-        var count = await _context.Students.CountAsync() + 1;
+        var year = DateTime.UtcNow.Year;
+        // Use MAX(Id) instead of COUNT() to prevent duplicates when records are deleted
+        var maxId = await _context.Students.MaxAsync(s => (int?)s.Id) ?? 0;
+        var seq = maxId + 1;
 
-        return $"NAI-{year}-{count:D6}";
+        var formattedCounter = seq.ToString().PadLeft(counterLen, '0');
+        return $"{prefix}-{year}-{formattedCounter}";
     }
 
     public async Task<string> GenerateApplicationNumberAsync()
     {
         var year = DateTime.UtcNow.Year;
-
-        var count = await _context.EnrollmentApplications.CountAsync() + 1;
-
-        return $"APP-{year}-{count:D6}";
+        // Use MAX(Id) instead of COUNT() to prevent duplicates when records are deleted
+        var maxId = await _context.EnrollmentApplications.MaxAsync(a => (int?)a.Id) ?? 0;
+        var seq = maxId + 1;
+        return $"APP-{year}-{seq:D6}";
     }
 }

@@ -100,29 +100,29 @@ export const StudentManagementPage: React.FC = () => {
   const exportCSV = () => toast.success('Exporting Student Directory (CSV)...');
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl font-black text-purple-950 dark:text-white tracking-tight">
             Student Roster Management
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Complete student directory and account status.
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Complete student directory, enrollment status, and learner records.
           </p>
         </div>
 
         <div className="flex items-center space-x-3">
           <button
             onClick={exportCSV}
-            className="inline-flex items-center px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs"
+            className="inline-flex items-center px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-purple-50 dark:hover:bg-slate-800 transition-colors shadow-xs"
           >
-            <Download className="w-4 h-4 mr-2 text-emerald-500" />
+            <Download className="w-4 h-4 mr-2 text-emerald-600" />
             Export CSV
           </button>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-500 transition-colors shadow-md shadow-blue-500/20"
+            className="inline-flex items-center px-4 py-2.5 text-xs font-bold text-white bg-purple-700 hover:bg-purple-600 rounded-xl shadow-lg shadow-purple-600/25 transition-all hover:scale-[1.01]"
           >
             <Plus className="w-4 h-4 mr-2" />
             New Student Profile
@@ -132,42 +132,40 @@ export const StudentManagementPage: React.FC = () => {
 
       {/* Metric Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <StatCard title="Total Students" value={isLoading ? '…' : `${counts.total}`} icon={Users} />
-        <StatCard title="Active" value={isLoading ? '…' : `${counts.active}`} icon={UserCheck} iconBgColor="bg-emerald-500/10 text-emerald-500" />
-        <StatCard title="Inactive" value={isLoading ? '…' : `${counts.inactive}`} icon={UserX} iconBgColor="bg-rose-500/10 text-rose-500" />
+        <StatCard title="Total Students" value={isLoading ? '…' : `${counts.total}`} icon={Users} iconBgColor="bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300" />
+        <StatCard title="Active Enrollees" value={isLoading ? '…' : `${counts.active}`} icon={UserCheck} iconBgColor="bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300" />
+        <StatCard title="Inactive / Inactive" value={isLoading ? '…' : `${counts.inactive}`} icon={UserX} iconBgColor="bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300" />
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-600 dark:text-purple-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by student name, number, LRN, or email..."
-            aria-label="Search students"
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-white outline-hidden focus:ring-1 focus:ring-blue-500"
+            placeholder="Search by name, LRN, student #..."
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600"
           />
         </div>
 
         <div className="flex items-center space-x-3 w-full sm:w-auto">
-          <Filter className="w-4 h-4 text-slate-400" />
+          <Filter className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-            aria-label="Filter by status"
-            className="px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 outline-hidden"
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-600"
           >
             <option value="ALL">All Statuses</option>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
+            <option value="ACTIVE">Active Only</option>
+            <option value="INACTIVE">Inactive Only</option>
           </select>
         </div>
       </div>
 
-      {/* Data Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
+      {/* Main Table */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 uppercase text-[11px] font-semibold tracking-wider border-b border-slate-200 dark:border-slate-800">
@@ -200,7 +198,7 @@ export const StudentManagementPage: React.FC = () => {
                 !isError &&
                 filtered.map((s) => (
                   <tr key={s.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="px-6 py-4 font-mono text-xs font-bold text-blue-600 dark:text-blue-400">{s.studentNumber}</td>
+                    <td className="px-6 py-4 font-mono text-xs font-bold text-purple-700 dark:text-purple-400">{s.studentNumber}</td>
                     <td className="px-6 py-4 font-mono text-xs text-slate-500">{s.lrn}</td>
                     <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{s.fullName}</td>
                     <td className="px-6 py-4 text-xs text-slate-500">{s.email}</td>
@@ -220,7 +218,7 @@ export const StudentManagementPage: React.FC = () => {
                         onClick={() => setEditLimitationFor(s.fullName)}
                         title="Edit (limited)"
                         aria-label={`Edit ${s.fullName}`}
-                        className="p-1.5 text-slate-400 hover:text-blue-500 rounded-md"
+                        className="p-1.5 text-slate-400 hover:text-purple-700 rounded-md"
                       >
                         <Info className="w-4 h-4" />
                       </button>

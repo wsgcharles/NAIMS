@@ -6,25 +6,25 @@ import { useAuth } from '../../contexts/AuthContext';
 export const ProfilePage: React.FC = () => {
   const { user } = useAuth();
 
-  const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || 'EduCore User';
+  const displayName = user?.fullName || [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || 'Authenticated Account';
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-3xl pb-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">My Profile</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Your EduCore account details.
+        <h1 className="text-2xl font-black text-purple-950 dark:text-white tracking-tight">My Profile</h1>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Your official Noah's Academy account credentials and system authorization.
         </p>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs">
-        <div className="flex items-center gap-4 p-6 border-b border-slate-200 dark:border-slate-800">
-          <div className="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xl shrink-0">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl shadow-xs overflow-hidden">
+        <div className="flex items-center gap-4 p-6 border-b border-slate-100 dark:border-slate-800">
+          <div className="w-14 h-14 rounded-full bg-purple-700 text-white flex items-center justify-center font-black text-xl shrink-0 ring-4 ring-purple-200 dark:ring-purple-950">
             {displayName[0]?.toUpperCase() || 'U'}
           </div>
           <div>
             <div className="font-bold text-lg text-slate-900 dark:text-white">{displayName}</div>
-            <div className="text-sm text-slate-500 dark:text-slate-400">{user?.role}</div>
+            <div className="text-xs font-semibold text-purple-700 dark:text-purple-400">{user?.role}</div>
           </div>
         </div>
 

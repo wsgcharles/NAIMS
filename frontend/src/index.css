@@ -1,54 +1,62 @@
 @import "tailwindcss";
 
-/* Tailwind v4 defaults dark: to `prefers-color-scheme`. ThemeContext toggles a
-   `.dark`/`.light` class on <html> instead, so dark: must be re-bound to that
-   class or the manual theme switch has no visual effect. */
+/* Tailwind v4 custom dark variant binding */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Base Canvas & Card Surfaces */
+    --background: 260 25% 98%;          /* Light soft lavender-gray canvas */
+    --foreground: 265 85% 10%;          /* Deep violet text */
+    --card: 0 0% 100%;                  /* Crisp white card surface */
+    --card-foreground: 265 85% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 142.1 76.2% 36.3%;
+    --popover-foreground: 265 85% 10%;
+    
+    /* Institutional Purple Palette (Noah's Academy Brand) */
+    --primary: 267 84% 48%;             /* Institutional Purple (#6D28D9 / #7C3AED) */
+    --primary-hover: 267 84% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 272 72% 23%;           /* Deep Royal Purple (#3B0764 / #4C1D95) */
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Semantic Feedback Scale */
+    --muted: 260 20% 96%;
+    --muted-foreground: 265 15% 45%;
+    --accent: 142.1 76.2% 36.3%;        /* Emerald Accent (Success / Paid) */
     --accent-foreground: 355.7 100% 97.3%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.75rem;
+    --destructive: 346.8 77.2% 49.8%;   /* Crimson Red (Danger / Absent) */
+    --destructive-foreground: 0 0% 100%;
+    --warning: 37.7 92.1% 50.2%;        /* Warm Amber (Pending / Late) */
+    --border: 260 20% 91%;
+    --input: 260 20% 91%;
+    --ring: 267 84% 48%;
+    --radius: 0.85rem;                  /* 14px rounded corners */
   }
 
   .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 6.9%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 6.9%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
+    --background: 270 50% 5%;           /* Deepest Midnight Purple Canvas */
+    --foreground: 260 20% 98%;
+    --card: 270 40% 9%;                 /* Elevated Dark Purple Card */
+    --card-foreground: 260 20% 98%;
+    --popover: 270 40% 9%;
+    --popover-foreground: 260 20% 98%;
+    
+    --primary: 267 84% 65%;             /* Vibrant Purple for Dark Mode */
+    --primary-hover: 267 84% 72%;
+    --primary-foreground: 270 50% 5%;
+    --secondary: 272 72% 23%;
+    --secondary-foreground: 260 20% 98%;
+    
+    --muted: 270 30% 15%;
+    --muted-foreground: 265 15% 65%;
     --accent: 142.1 70.6% 45.3%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 224.3 76.3% 48%;
+    --accent-foreground: 260 20% 98%;
+    --destructive: 346.8 85% 65%;
+    --destructive-foreground: 260 20% 98%;
+    --border: 270 30% 16%;
+    --input: 270 30% 16%;
+    --ring: 267 84% 65%;
   }
 }
 
@@ -66,7 +74,34 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Scrollbar */
+/* Fix Browser Autofill forcing yellow/dark background on inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+select:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active,
+.dark select:-webkit-autofill,
+.dark select:-webkit-autofill:hover,
+.dark select:-webkit-autofill:focus,
+.dark select:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Custom Purple Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -77,10 +112,40 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
+  background: rgba(124, 58, 237, 0.25);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.4);
+  background: rgba(124, 58, 237, 0.45);
+}
+
+/* Glassmorphism & Custom NAISIS Utilities */
+@layer utilities {
+  .glass-panel {
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(233, 213, 255, 0.6);
+  }
+  .dark .glass-panel {
+    background-color: rgba(15, 10, 30, 0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(88, 28, 135, 0.4);
+  }
+
+  .sidebar-purple-gradient {
+    background: linear-gradient(180deg, #4C1D95 0%, #3B0764 60%, #2E0249 100%);
+  }
+
+  .hero-purple-gradient {
+    background: linear-gradient(135deg, #4C1D95 0%, #5B21B6 40%, #6D28D9 70%, #4338CA 100%);
+  }
+
+  .focus-ring {
+    outline: none;
+  }
+  .focus-ring:focus-visible {
+    outline: 2px solid #7C3AED;
+    outline-offset: 2px;
+  }
 }

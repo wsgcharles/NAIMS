@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { StatCard } from '../../components/data-display/StatCard';
 import { StatusChip } from '../../components/data-display/StatusChip';
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useStudentApi } from '../../hooks/useStudentApi';
+import { admissionService, type StudentEnrollmentStatus } from '../../services/admissionService';
 import { toast } from 'sonner';
 
 type StudentTab =
@@ -87,6 +88,29 @@ export const StudentDashboard: React.FC = () => {
   const ledger = useLedger();
   const history = useAcademicHistory();
 
+  const [reEnrollmentStatus, setReEnrollmentStatus] = useState<StudentEnrollmentStatus | null>(null);
+  const [enrolling, setEnrolling] = useState(false);
+
+  useEffect(() => {
+    admissionService.getStudentEnrollmentStatus()
+      .then(res => setReEnrollmentStatus(res))
+      .catch(() => {});
+  }, []);
+
+  const handleConfirmReEnrollment = async () => {
+    setEnrolling(true);
+    try {
+      await admissionService.confirmStudentReEnrollment();
+      toast.success("Re-enrollment request submitted to Registrar & Accounting!");
+      const updated = await admissionService.getStudentEnrollmentStatus();
+      setReEnrollmentStatus(updated);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || "Failed to submit re-enrollment request.");
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
   const displayName = profile.data ? `${profile.data.firstName} ${profile.data.lastName}` : `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
 
   return (
@@ -116,7 +140,7 @@ export const StudentDashboard: React.FC = () => {
 
           <button
             onClick={() => toast.info('Grade slip export is not yet available from the backend.')}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all shadow-lg shadow-blue-500/20 shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-xl text-xs transition-all shadow-lg shadow-purple-600/25 shrink-0 hover:scale-[1.01]"
           >
             <Download className="w-4 h-4" />
             <span>Download Official Grade Slip</span>
@@ -125,7 +149,7 @@ export const StudentDashboard: React.FC = () => {
       </div>
 
       {/* Navigation Subnav Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-4">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-4">
         {[
           { id: 'dashboard', label: 'Dashboard', icon: BookOpen },
           { id: 'grades', label: 'Grades', icon: Award },
@@ -145,8 +169,8 @@ export const StudentDashboard: React.FC = () => {
               onClick={() => goToTab(tab.id as StudentTab)}
               className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
                 isActive
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                  : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700'
+                  ? 'bg-purple-700 text-white shadow-md shadow-purple-600/25'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white border border-slate-200 dark:border-slate-800 hover:bg-purple-50 dark:hover:bg-slate-800'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -159,6 +183,66 @@ export const StudentDashboard: React.FC = () => {
       {/* TAB 1: DASHBOARD OVERVIEW */}
       {activeTab === 'dashboard' && (
         <div className="space-y-8">
+          {/* RE-ENROLLMENT STATUS CARD FOR RETURNING STUDENTS */}
+          <div className="bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 border border-purple-800/60 rounded-3xl p-6 lg:p-8 text-white shadow-xl space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-purple-800/50 pb-4">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 px-3 py-1 bg-amber-400/10 rounded-full border border-amber-400/20">
+                  AY {reEnrollmentStatus?.schoolYear ?? '2027–2028'} Re-enrollment Cycle
+                </span>
+                <h2 className="text-xl font-black text-white mt-2">Returning Student Enrollment Status</h2>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-slate-300 font-medium">Period: <strong>{reEnrollmentStatus?.enrollmentPeriodText ?? 'May 01 – Jun 30'}</strong></span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-semibold">
+              <div className="p-3 bg-purple-900/40 rounded-2xl border border-purple-800/40">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Eligibility Status</span>
+                <span className="text-sm font-black text-amber-300">{reEnrollmentStatus?.status ?? 'Eligible'}</span>
+              </div>
+
+              <div className="p-3 bg-purple-900/40 rounded-2xl border border-purple-800/40">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Assessment Status</span>
+                <span className="text-sm font-black text-purple-200">{reEnrollmentStatus?.assessmentStatus ?? 'Pending'}</span>
+              </div>
+
+              <div className="p-3 bg-purple-900/40 rounded-2xl border border-purple-800/40">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Payment Status</span>
+                <span className="text-sm font-black text-purple-200">{reEnrollmentStatus?.paymentStatus ?? 'Pending'}</span>
+              </div>
+
+              <div className="p-3 bg-purple-900/40 rounded-2xl border border-purple-800/40">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Section Assignment</span>
+                <span className="text-sm font-black text-purple-200">{reEnrollmentStatus?.sectionStatus ?? 'Not Yet Assigned'}</span>
+              </div>
+            </div>
+
+            {reEnrollmentStatus?.canEnrollNow ? (
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p className="text-xs text-purple-200 leading-relaxed font-medium">
+                  As an existing Noah's Academy student, click <strong>[Enroll Now]</strong> to confirm your re-enrollment. No admission forms or credentials required.
+                </p>
+
+                <button
+                  onClick={handleConfirmReEnrollment}
+                  disabled={enrolling}
+                  className="w-full sm:w-auto px-8 py-3.5 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 text-purple-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all hover:scale-[1.02] shrink-0"
+                >
+                  {enrolling ? 'Submitting Re-enrollment...' : 'Enroll Now for AY 2027–2028'}
+                </button>
+              </div>
+            ) : (
+              <div className="p-3.5 bg-purple-900/30 rounded-2xl border border-purple-800/40 text-xs text-purple-200 font-medium">
+                {reEnrollmentStatus?.isEnrollmentOpen === false
+                  ? 'Enrollment is currently closed for Academic Year 2027–2028.'
+                  : `Current Re-enrollment Stage: ${reEnrollmentStatus?.status ?? 'Pending'}. Proceed to Accounting for assessment.`}
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <StatCard
               title="Enrolled Subjects"

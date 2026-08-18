@@ -14,6 +14,9 @@ import type {
   EmployeeDirectoryEntry,
   AcademicYearRecord,
   AdminGradeLevel,
+  AccountingQueueItem,
+  GenerateAssessmentPayload,
+  PaymentAdjustmentPayload,
 } from '../types';
 import { toast } from 'sonner';
 
@@ -92,13 +95,17 @@ export const useAccountingApi = () => {
       queryKey: queryKeys.finance.currentEmployee,
       queryFn: async (): Promise<number | null> => {
         const response = await apiClient.get<EmployeeDirectoryEntry[]>('/Employees');
-        const match = response.data.find(
-          (e) => e.email.toLowerCase() === (user?.email ?? '').toLowerCase()
-        );
+        const match = response.data.find((e) => {
+          if (user?.id && (e as any).userId != null) {
+            return Number((e as any).userId) === Number(user.id);
+          }
+          return e.email.toLowerCase() === (user?.email ?? '').toLowerCase();
+        });
         return match?.id ?? null;
       },
-      enabled: !!user?.email,
+      enabled: !!user?.id || !!user?.email,
     });
+
 
   // ---------- Student Lookup ----------
   const useStudentsLookup = () =>
@@ -169,6 +176,7 @@ export const useAccountingApi = () => {
       onSuccess: () => {
         toast.success('Payment recorded and official receipt generated.');
         queryClient.invalidateQueries({ queryKey: queryKeys.finance.dashboard });
+        queryClient.invalidateQueries({ queryKey: ['finance', 'queue'] });
         if (studentId != null) {
           queryClient.invalidateQueries({ queryKey: queryKeys.finance.bills(studentId) });
           queryClient.invalidateQueries({ queryKey: queryKeys.finance.ledger(studentId) });
@@ -176,6 +184,56 @@ export const useAccountingApi = () => {
         }
       },
       onError: mutationError('Unable to process this payment.'),
+    });
+
+  // ---------- Accounting Queue & Applicant Assessment ----------
+  const useAccountingQueue = (stage?: string) =>
+    useQuery({
+      queryKey: ['finance', 'queue', stage ?? 'All'],
+      queryFn: async (): Promise<AccountingQueueItem[]> => {
+        const response = await apiClient.get<AccountingQueueItem[]>('/Accounting/Queue', {
+          params: { stage },
+        });
+        return response.data;
+      },
+    });
+
+  const useGenerateAssessmentMutation = () =>
+    useMutation({
+      mutationFn: async (payload: GenerateAssessmentPayload) => {
+        const response = await apiClient.post('/Accounting/Assessment/Generate', payload);
+        return response.data;
+      },
+      onSuccess: () => {
+        toast.success('Financial assessment bill generated and applicant moved to Accounting Assessment stage.');
+        queryClient.invalidateQueries({ queryKey: ['finance', 'queue'] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.finance.dashboard });
+      },
+      onError: mutationError('Unable to generate assessment bill.'),
+    });
+
+  const useApplicationFinancialAccount = (applicationId: number | null) =>
+    useQuery({
+      queryKey: ['finance', 'application-ledger', applicationId],
+      queryFn: async (): Promise<StudentLedger> => {
+        const response = await apiClient.get<StudentLedger>(`/Accounting/Ledger/Application/${applicationId}`);
+        return response.data;
+      },
+      enabled: applicationId != null,
+    });
+
+  const useAdjustPaymentMutation = () =>
+    useMutation({
+      mutationFn: async (payload: PaymentAdjustmentPayload) => {
+        const response = await apiClient.post('/Accounting/Payments/Adjust', payload);
+        return response.data;
+      },
+      onSuccess: () => {
+        toast.success('Payment record adjusted.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.finance.dashboard });
+        queryClient.invalidateQueries({ queryKey: ['finance', 'queue'] });
+      },
+      onError: mutationError('Unable to adjust payment.'),
     });
 
   return {
@@ -192,5 +250,9 @@ export const useAccountingApi = () => {
     useStudentBills,
     useStudentReceipts,
     useProcessPaymentMutation,
+    useAccountingQueue,
+    useGenerateAssessmentMutation,
+    useApplicationFinancialAccount,
+    useAdjustPaymentMutation,
   };
 };

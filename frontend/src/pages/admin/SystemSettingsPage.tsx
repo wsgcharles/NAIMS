@@ -50,7 +50,7 @@ export const SystemSettingsPage: React.FC = () => {
         {/* School Info */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-4 shadow-xs">
           <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center">
-            <Settings className="w-4 h-4 mr-2 text-blue-500" /> Institution Profile
+            <Settings className="w-4 h-4 mr-2 text-purple-700 dark:text-purple-400" /> Institution Profile
           </h3>
           {isLoading || !draft ? (
             <div className="space-y-3">
@@ -69,7 +69,7 @@ export const SystemSettingsPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-500 mb-1">Active Academic Year</label>
+                <label className="block font-semibold text-slate-500 mb-1">Active School Year</label>
                 <select
                   value={draft.currentAcademicYearId ?? ''}
                   onChange={(e) => setDraft({ ...draft, currentAcademicYearId: e.target.value ? Number(e.target.value) : null })}
@@ -98,14 +98,14 @@ export const SystemSettingsPage: React.FC = () => {
                 <span className="font-bold text-slate-900 dark:text-white">Forced First Login Password Change</span>
                 <p className="text-[11px] text-slate-500">Not yet configurable — no backend field exists for this setting.</p>
               </div>
-              <input type="checkbox" disabled defaultChecked className="w-4 h-4 text-blue-600 rounded-md cursor-not-allowed" />
+              <input type="checkbox" disabled defaultChecked className="w-4 h-4 text-purple-600 rounded-md cursor-not-allowed" />
             </div>
             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 opacity-70">
               <div>
                 <span className="font-bold text-slate-900 dark:text-white">JWT Token Inactivity Expiry</span>
                 <p className="text-[11px] text-slate-500">Not yet configurable — no backend field exists for this setting.</p>
               </div>
-              <input type="checkbox" disabled defaultChecked className="w-4 h-4 text-blue-600 rounded-md cursor-not-allowed" />
+              <input type="checkbox" disabled defaultChecked className="w-4 h-4 text-purple-600 rounded-md cursor-not-allowed" />
             </div>
           </div>
         </div>

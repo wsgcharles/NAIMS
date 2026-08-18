@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { CurrentUser, LoginRequest, UserRoleString } from '../types';
+import type { CurrentUser, LoginRequest } from '../types';
 import { authService } from '../services/authService';
 import { jwtDecode } from 'jwt-decode';
 
@@ -10,13 +10,11 @@ interface AuthContextType {
   isLoading: boolean;
   login: (credentials: LoginRequest) => Promise<CurrentUser>;
   logout: () => void;
-  setMockRole: (role: UserRoleString) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // The backend issues the role claim under the long ASP.NET ClaimTypes.Role URI
-// (see EduCore.API/Services/JwtService.cs), not a short "role" key.
 const ROLE_CLAIM_URI = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -30,48 +28,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedUser = localStorage.getItem('educore_user');
 
       if (storedToken) {
-        setToken(storedToken);
-        let hasStoredUser = false;
-        if (storedUser) {
-          try {
-            setUser(JSON.parse(storedUser));
-            hasStoredUser = true;
-          } catch {
-            localStorage.removeItem('educore_user');
-          }
-        }
         try {
-          // Prefer the real, authoritative profile whenever the backend is reachable.
-          const me = await authService.getCurrentUser();
-          setUser(me);
-          localStorage.setItem('educore_user', JSON.stringify(me));
-        } catch {
-          // /auth/me failed (backend offline, transient error, expired token).
-          // If a valid session was already restored from storage above, trust it —
-          // do NOT overwrite an already-known role with a guess or a fabricated user.
-          if (!hasStoredUser) {
-            try {
-              const decoded: any = jwtDecode(storedToken);
+          const decodedToken: any = jwtDecode(storedToken);
+          const currentTime = Date.now() / 1000;
+
+          if (decodedToken.exp && decodedToken.exp < currentTime) {
+            authService.logout();
+            setToken(null);
+            setUser(null);
+          } else {
+            setToken(storedToken);
+            if (storedUser) {
+              try {
+                setUser(JSON.parse(storedUser));
+              } catch {
+                setUser(null);
+              }
+            } else {
+              const decodedRole = decodedToken[ROLE_CLAIM_URI] || decodedToken.role || 'Teacher';
               const fallbackUser: CurrentUser = {
-                id: decoded.UserId || decoded.sub || 'usr-1',
-                email: decoded.email || 'user@educore.edu',
-                role: decoded[ROLE_CLAIM_URI] as UserRoleString,
-                mustChangePassword: decoded.MustChangePassword === 'true',
+                id: decodedToken.sub || decodedToken.nameid || '0',
+                email: decodedToken.email || '',
+                role: decodedRole,
+                fullName: decodedToken.email || '',
+                firstName: decodedToken.given_name || '',
+                lastName: decodedToken.family_name || '',
+                mustChangePassword: false,
                 isActive: true,
               };
-              if (fallbackUser.role) {
-                setUser(fallbackUser);
-                localStorage.setItem('educore_user', JSON.stringify(fallbackUser));
-              } else {
-                // Token decoded but carries no recognizable role claim — fail closed.
-                logout();
-              }
-            } catch {
-              // Token isn't a parseable JWT at all — fail closed rather than
-              // guessing a role. A failed session must remain a failed session.
-              logout();
+              setUser(fallbackUser);
+              localStorage.setItem('educore_user', JSON.stringify(fallbackUser));
             }
+
+            // Refresh user profile asynchronously from GET /api/auth/me to ensure live dynamic DB data
+            authService.getCurrentUser().then((me) => {
+              const updatedUser: CurrentUser = {
+                id: me.id.toString(),
+                email: me.email,
+                role: me.role as any,
+                fullName: me.fullName,
+                firstName: me.firstName,
+                lastName: me.lastName,
+                mustChangePassword: me.mustChangePassword,
+                isActive: true,
+              };
+              setUser(updatedUser);
+              localStorage.setItem('educore_user', JSON.stringify(updatedUser));
+            }).catch(() => {});
           }
+        } catch {
+          authService.logout();
+          setToken(null);
+          setUser(null);
         }
       }
       setIsLoading(false);
@@ -84,19 +92,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const response = await authService.login(credentials);
-      setToken(response.token);
-      localStorage.setItem('educore_token', response.token);
+      const decodedToken: any = jwtDecode(response.token);
+      const decodedRole = (decodedToken[ROLE_CLAIM_URI] || decodedToken.role || response.role || 'Teacher') as any;
 
       const loggedInUser: CurrentUser = {
-        id: response.userId,
+        id: response.userId.toString(),
         email: response.email,
-        role: response.role as UserRoleString,
+        role: decodedRole,
+        fullName: response.fullName || response.email,
+        firstName: response.firstName || '',
+        lastName: response.lastName || '',
         mustChangePassword: response.mustChangePassword,
         isActive: true,
       };
 
+      setToken(response.token);
       setUser(loggedInUser);
+      localStorage.setItem('educore_token', response.token);
       localStorage.setItem('educore_user', JSON.stringify(loggedInUser));
+
       setIsLoading(false);
       return loggedInUser;
     } catch (err) {
@@ -107,25 +121,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     authService.logout();
+    try {
+      localStorage.removeItem('educore_token');
+      localStorage.removeItem('educore_user');
+      localStorage.removeItem('educore_permissions');
+      sessionStorage.clear();
+    } catch {}
     setToken(null);
     setUser(null);
-  };
-
-  // Demo tool to quickly preview all 5 role portals
-  const setMockRole = (role: UserRoleString) => {
-    const mockUser: CurrentUser = {
-      id: 'mock-id',
-      email: `${role.toLowerCase()}@noahsacademy.edu`,
-      role: role,
-      firstName: 'Demo',
-      lastName: role,
-      mustChangePassword: false,
-      isActive: true,
-    };
-    setUser(mockUser);
-    localStorage.setItem('educore_user', JSON.stringify(mockUser));
-    localStorage.setItem('educore_token', 'mock-token-demo');
-    setToken('mock-token-demo');
+    window.location.replace('/login');
   };
 
   return (
@@ -137,7 +141,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         logout,
-        setMockRole,
       }}
     >
       {children}

@@ -73,6 +73,26 @@ export const useParentApi = () => {
       enabled: studentId != null,
     });
 
+  const useChildAttendance = (studentId: number | null) =>
+    useQuery({
+      queryKey: ['parentPortal', 'attendance', studentId],
+      queryFn: async () => {
+        const response = await apiClient.get(`/ParentPortal/Children/${studentId}/Attendance`);
+        return response.data;
+      },
+      enabled: studentId != null,
+    });
+
+  const useChildAttendanceSummary = (studentId: number | null) =>
+    useQuery({
+      queryKey: ['parentPortal', 'attendanceSummary', studentId],
+      queryFn: async () => {
+        const response = await apiClient.get(`/ParentPortal/Children/${studentId}/Attendance/Summary`);
+        return response.data;
+      },
+      enabled: studentId != null,
+    });
+
   return {
     useParentProfile,
     useChildren,
@@ -80,5 +100,7 @@ export const useParentApi = () => {
     useCurrentAcademicYear,
     useChildGrades,
     useChildLedger,
+    useChildAttendance,
+    useChildAttendanceSummary,
   };
 };

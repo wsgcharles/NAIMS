@@ -13,7 +13,18 @@ public class CreateSubjectRequest
     [Required]
     public int GradeLevelId { get; set; }
 
+    /// <summary>Nullable link to AcademicProgram (Strand). Null = Common/Core subject for the GradeLevel.</summary>
+    public int? ProgramId { get; set; }
+
     public bool IsCoreSubject { get; set; }
+
+    public string CurriculumVersion { get; set; } = "MATATAG-K10";
+
+    public string SubjectType { get; set; } = "Core";
+
+    public int? Semester { get; set; }
+
+    public string? DomainCategory { get; set; }
 
     [Required]
     public int Units { get; set; }

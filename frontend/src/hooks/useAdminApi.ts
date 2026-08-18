@@ -17,9 +17,18 @@ import type {
   SchoolSettings,
   StudentSectionAssignment,
   SectionOption,
+  SectionStats,
+  CreateSectionPayload,
+  UpdateSectionPayload,
+  AssignSectionTeacherPayload,
   RegistrarStudent,
   AcademicYearRecord,
+  AdminAnnouncement,
+  CreateAnnouncementPayload,
+  PagedAuditLogResponse,
+  ReportsOverview,
 } from '../types';
+
 import { toast } from 'sonner';
 
 const mutationError = (fallback: string) => (err: any) => {
@@ -332,6 +341,16 @@ export const useAdminApi = () => {
       },
     });
 
+  const useActiveSchoolYear = () =>
+    useQuery({
+      queryKey: queryKeys.admin.activeAcademicYear,
+      queryFn: async (): Promise<AcademicYearRecord> => {
+        const response = await apiClient.get<AcademicYearRecord>('/AcademicYears/active');
+        return response.data;
+      },
+      staleTime: 60 * 1000,
+    });
+
   const useAcademicYearsLookup = () =>
     useQuery({
       queryKey: queryKeys.admin.academicYears,
@@ -339,6 +358,170 @@ export const useAdminApi = () => {
         const response = await apiClient.get<AcademicYearRecord[]>('/AcademicYears');
         return response.data;
       },
+    });
+
+  const useCreateSchoolYearMutation = () =>
+    useMutation({
+      mutationFn: async (payload: Partial<AcademicYearRecord>) => {
+        const response = await apiClient.post<AcademicYearRecord>('/AcademicYears', payload);
+        return response.data;
+      },
+      onSuccess: () => {
+        toast.success('School Year created successfully.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.academicYears });
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.activeAcademicYear });
+      },
+      onError: mutationError('Unable to create School Year.'),
+    });
+
+  const useUpdateSchoolYearMutation = () =>
+    useMutation({
+      mutationFn: async ({ id, data }: { id: number; data: Partial<AcademicYearRecord> }) => {
+        const response = await apiClient.put<AcademicYearRecord>(`/AcademicYears/${id}`, data);
+        return response.data;
+      },
+      onSuccess: () => {
+        toast.success('School Year updated successfully.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.academicYears });
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.activeAcademicYear });
+      },
+      onError: mutationError('Unable to update School Year.'),
+    });
+
+  const useDeleteSchoolYearMutation = () =>
+    useMutation({
+      mutationFn: async (id: number) => {
+        await apiClient.delete(`/AcademicYears/${id}`);
+      },
+      onSuccess: () => {
+        toast.success('School Year deleted.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.academicYears });
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.activeAcademicYear });
+      },
+      onError: mutationError('Unable to delete School Year.'),
+    });
+
+  const useSetActiveSchoolYearMutation = () =>
+    useMutation({
+      mutationFn: async (id: number) => {
+        await apiClient.put(`/AcademicYears/${id}/set-active`);
+      },
+      onSuccess: () => {
+        toast.success('Active School Year updated.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.academicYears });
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.activeAcademicYear });
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.systemSettings });
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard });
+      },
+      onError: mutationError('Unable to set active School Year.'),
+    });
+
+  const useSetSemesterMutation = () =>
+    useMutation({
+      mutationFn: async ({ id, semester }: { id: number; semester: string }) => {
+        await apiClient.put(`/AcademicYears/${id}/set-semester`, { semester });
+      },
+      onSuccess: () => {
+        toast.success('Semester updated.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.academicYears });
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.activeAcademicYear });
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard });
+      },
+      onError: mutationError('Unable to update semester.'),
+    });
+
+  const useArchiveSchoolYearMutation = () =>
+    useMutation({
+      mutationFn: async (id: number) => {
+        await apiClient.put(`/AcademicYears/${id}/archive`);
+      },
+      onSuccess: () => {
+        toast.success('School Year archived.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.academicYears });
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.activeAcademicYear });
+      },
+      onError: mutationError('Unable to archive School Year.'),
+    });
+
+  // ---------- Grade Approval & Release Workflow (Academic Head / Vice Principal) ----------
+  const usePendingGradeApprovals = () =>
+    useQuery({
+      queryKey: queryKeys.admin.gradeApprovals,
+      queryFn: async (): Promise<any[]> => {
+        const response = await apiClient.get('/GradeApproval/pending');
+        return response.data;
+      },
+    });
+
+  const useAllGradesForApproval = (academicYearId?: number, statusFilter?: string) =>
+    useQuery({
+      queryKey: [...queryKeys.admin.gradeApprovals, academicYearId, statusFilter],
+      queryFn: async (): Promise<any[]> => {
+        const response = await apiClient.get('/GradeApproval/all', {
+          params: { academicYearId, status: statusFilter },
+        });
+        return response.data;
+      },
+    });
+
+  const useApproveGradeMutation = () =>
+    useMutation({
+      mutationFn: async ({ gradeId, remarks }: { gradeId: number; remarks?: string }) => {
+        await apiClient.put(`/GradeApproval/${gradeId}/approve`, { remarks });
+      },
+      onSuccess: () => {
+        toast.success('Grade officially approved.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.gradeApprovals });
+      },
+      onError: mutationError('Unable to approve grade.'),
+    });
+
+  const useApproveClassGradesMutation = () =>
+    useMutation({
+      mutationFn: async ({ teachingAssignmentId, remarks }: { teachingAssignmentId: number; remarks?: string }) => {
+        await apiClient.put(`/GradeApproval/class/${teachingAssignmentId}/approve`, { remarks });
+      },
+      onSuccess: () => {
+        toast.success('Class grades officially approved.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.gradeApprovals });
+      },
+      onError: mutationError('Unable to approve class grades.'),
+    });
+
+  const useRejectGradeMutation = () =>
+    useMutation({
+      mutationFn: async ({ gradeId, remarks }: { gradeId: number; remarks: string }) => {
+        await apiClient.put(`/GradeApproval/${gradeId}/reject`, { remarks });
+      },
+      onSuccess: () => {
+        toast.success('Grade returned to teacher for revision.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.gradeApprovals });
+      },
+      onError: mutationError('Unable to reject grade.'),
+    });
+
+  const useRejectClassGradesMutation = () =>
+    useMutation({
+      mutationFn: async ({ teachingAssignmentId, remarks }: { teachingAssignmentId: number; remarks: string }) => {
+        await apiClient.put(`/GradeApproval/class/${teachingAssignmentId}/reject`, { remarks });
+      },
+      onSuccess: () => {
+        toast.success('Class grades returned to teacher for revision.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.gradeApprovals });
+      },
+      onError: mutationError('Unable to reject class grades.'),
+    });
+
+  const useReleaseClassGradesMutation = () =>
+    useMutation({
+      mutationFn: async (teachingAssignmentId: number) => {
+        await apiClient.put(`/GradeApproval/class/${teachingAssignmentId}/release`);
+      },
+      onSuccess: () => {
+        toast.success('Grades officially released to Student & Parent Portals.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.gradeApprovals });
+      },
+      onError: mutationError('Unable to release class grades.'),
     });
 
   const useUpdateSchoolSettingsMutation = () =>
@@ -406,6 +589,134 @@ export const useAdminApi = () => {
       onError: mutationError('Unable to remove this section assignment.'),
     });
 
+  // ---------- Announcements ----------
+  const useAnnouncements = () =>
+    useQuery({
+      queryKey: queryKeys.admin.announcements,
+      queryFn: async (): Promise<AdminAnnouncement[]> => {
+        const response = await apiClient.get<AdminAnnouncement[]>('/Announcements');
+        return response.data;
+      },
+    });
+
+  const useCreateAnnouncementMutation = () =>
+    useMutation({
+      mutationFn: async (payload: CreateAnnouncementPayload): Promise<AdminAnnouncement> => {
+        const response = await apiClient.post<AdminAnnouncement>('/Announcements', payload);
+        return response.data;
+      },
+      onSuccess: () => {
+        toast.success('Announcement published successfully.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.announcements });
+      },
+      onError: mutationError('Unable to publish announcement.'),
+    });
+
+  // ---------- Audit Logs ----------
+  const useAuditLogs = () =>
+    useQuery({
+      queryKey: queryKeys.admin.auditLogs,
+      queryFn: async (): Promise<PagedAuditLogResponse> => {
+        const response = await apiClient.get<PagedAuditLogResponse>('/AuditLogs');
+        return response.data;
+      },
+    });
+
+  // ---------- Reports Overview ----------
+  const useReportsOverview = () =>
+    useQuery({
+      queryKey: queryKeys.admin.reportsOverview,
+      queryFn: async (): Promise<ReportsOverview> => {
+        const response = await apiClient.get<ReportsOverview>('/Reports/overview');
+        return response.data;
+      },
+    });
+
+  const useAcademicPrograms = () =>
+    useQuery({
+      queryKey: ['admin', 'academicPrograms'],
+      queryFn: async (): Promise<any[]> => {
+        const response = await apiClient.get('/AcademicPrograms');
+        return response.data;
+      },
+    });
+
+  const useSectionStats = () =>
+    useQuery({
+      queryKey: ['admin', 'sectionStats'],
+      queryFn: async (): Promise<SectionStats> => {
+        const response = await apiClient.get<SectionStats>('/Sections/stats');
+        return response.data;
+      },
+    });
+
+  const useCreateSectionMutation = () =>
+    useMutation({
+      mutationFn: async (payload: CreateSectionPayload) => {
+        const response = await apiClient.post<SectionOption>('/Sections', payload);
+        return response.data;
+      },
+      onSuccess: () => {
+        toast.success('Section created successfully.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.sections });
+        queryClient.invalidateQueries({ queryKey: ['admin', 'sectionStats'] });
+      },
+      onError: mutationError('Unable to create section.'),
+    });
+
+  const useUpdateSectionMutation = () =>
+    useMutation({
+      mutationFn: async ({ id, data }: { id: number; data: UpdateSectionPayload }) => {
+        const response = await apiClient.put<SectionOption>(`/Sections/${id}`, data);
+        return response.data;
+      },
+      onSuccess: () => {
+        toast.success('Section updated successfully.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.sections });
+        queryClient.invalidateQueries({ queryKey: ['admin', 'sectionStats'] });
+      },
+      onError: mutationError('Unable to update section.'),
+    });
+
+  const useDeleteSectionMutation = () =>
+    useMutation({
+      mutationFn: async (id: number) => {
+        await apiClient.delete(`/Sections/${id}`);
+      },
+      onSuccess: () => {
+        toast.success('Section archived / removed.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.sections });
+        queryClient.invalidateQueries({ queryKey: ['admin', 'sectionStats'] });
+      },
+      onError: mutationError('Unable to archive section.'),
+    });
+
+  const useToggleSectionStatusMutation = () =>
+    useMutation({
+      mutationFn: async (id: number) => {
+        await apiClient.put(`/Sections/${id}/toggle-status`);
+      },
+      onSuccess: () => {
+        toast.success('Section status toggled.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.sections });
+        queryClient.invalidateQueries({ queryKey: ['admin', 'sectionStats'] });
+      },
+      onError: mutationError('Unable to update section status.'),
+    });
+
+  const useAssignSectionTeacherMutation = () =>
+    useMutation({
+      mutationFn: async ({ sectionId, payload }: { sectionId: number; payload: AssignSectionTeacherPayload }) => {
+        await apiClient.post(`/Sections/${sectionId}/assign-teacher`, payload);
+      },
+      onSuccess: () => {
+        toast.success('Teacher assigned to subject successfully.');
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.sections });
+        queryClient.invalidateQueries({ queryKey: ['admin', 'sectionStats'] });
+      },
+      onError: mutationError('Unable to assign teacher.'),
+    });
+
   return {
     useDashboardOverview,
     useStudents,
@@ -420,6 +731,7 @@ export const useAdminApi = () => {
     useDeleteEmployeeMutation,
     useSubjects,
     useGradeLevels,
+    useAcademicPrograms,
     useCreateSubjectMutation,
     useUpdateSubjectMutation,
     useDeleteSubjectMutation,
@@ -430,10 +742,36 @@ export const useAdminApi = () => {
     useSchoolSettings,
     useUpdateSchoolSettingsMutation,
     useAcademicYearsLookup,
+    useActiveSchoolYear,
+    useCreateSchoolYearMutation,
+    useUpdateSchoolYearMutation,
+    useDeleteSchoolYearMutation,
+    useSetActiveSchoolYearMutation,
+    useSetSemesterMutation,
+    useArchiveSchoolYearMutation,
+    usePendingGradeApprovals,
+    useAllGradesForApproval,
+    useApproveGradeMutation,
+    useApproveClassGradesMutation,
+    useRejectGradeMutation,
+    useRejectClassGradesMutation,
+    useReleaseClassGradesMutation,
     useSectionAssignments,
     useSectionsLookup,
+    useSectionStats,
+    useCreateSectionMutation,
+    useUpdateSectionMutation,
+    useDeleteSectionMutation,
+    useToggleSectionStatusMutation,
+    useAssignSectionTeacherMutation,
     useStudentsLookup,
     useCreateSectionAssignmentMutation,
     useDeleteSectionAssignmentMutation,
+    useAnnouncements,
+    useCreateAnnouncementMutation,
+    useAuditLogs,
+    useReportsOverview,
   };
 };
+
+

@@ -9,4 +9,6 @@ public interface IStudentDashboardService
     Task<List<StudentSubjectResponse>> GetSubjectsAsync(int userId);
 
     Task<List<StudentGradeResponse>> GetGradesAsync(int userId);
+
+    Task<byte[]?> GenerateGradeSlipPdfAsync(int userId);
 }

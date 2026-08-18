@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace EduCore.API.DTOs;
 
@@ -45,12 +45,20 @@ public class CreateEnrollmentRequest
     [Required]
     public string ParentContact { get; set; } = string.Empty;
 
+    [EmailAddress]
+    public string? ParentEmail { get; set; }
+
     [Required]
     public string Relationship { get; set; } = string.Empty;
+
 
     [Required]
     public string PreviousSchool { get; set; } = string.Empty;
 
     [Required]
     public string GradeApplyingFor { get; set; } = string.Empty;
-}
+
+    public string? Track { get; set; }
+
+    public string? Strand { get; set; }
+}

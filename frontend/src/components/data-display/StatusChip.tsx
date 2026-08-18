@@ -39,7 +39,7 @@ export const StatusChip: React.FC<StatusChipProps> = ({ status, type = 'generic'
         break;
       case EnrollmentStatus.Submitted:
         label = 'Submitted';
-        styleClass = 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400';
+        styleClass = 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800';
         break;
       case EnrollmentStatus.UnderReview:
         label = 'Under Review';
@@ -118,7 +118,7 @@ export const StatusChip: React.FC<StatusChipProps> = ({ status, type = 'generic'
         break;
       case 'Refunded':
         label = 'Refunded';
-        styleClass = 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400';
+        styleClass = 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800';
         break;
       case 'Cancelled':
         label = 'Cancelled';

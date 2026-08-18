@@ -70,7 +70,7 @@ export const SectionAllocationsPage: React.FC = () => {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-500 shadow-md shadow-blue-500/20"
+          className="inline-flex items-center px-4 py-2.5 text-xs font-bold text-white bg-purple-700 hover:bg-purple-600 rounded-xl shadow-lg shadow-purple-600/25 transition-all hover:scale-[1.01]"
         >
           <Plus className="w-4 h-4 mr-2" />
           New Assignment
@@ -223,7 +223,7 @@ export const SectionAllocationsPage: React.FC = () => {
               <button
                 onClick={handleCreate}
                 disabled={!canSubmit || createMutation.isPending}
-                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-md disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-600 rounded-lg shadow-md disabled:opacity-50"
               >
                 {createMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Assign

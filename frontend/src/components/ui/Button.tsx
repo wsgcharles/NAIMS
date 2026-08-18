@@ -1,10 +1,10 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'outline';
-type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'outline' | 'gold';
+export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
@@ -14,17 +14,19 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white shadow-sm shadow-blue-500/20 hover:shadow-blue-500/30 disabled:bg-blue-400',
+    'bg-purple-700 hover:bg-purple-600 active:bg-purple-800 text-white shadow-sm shadow-purple-600/25 hover:shadow-purple-600/35 disabled:bg-purple-400 dark:disabled:bg-purple-950',
   secondary:
-    'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-xs',
+    'bg-white dark:bg-slate-900 hover:bg-purple-50 dark:hover:bg-slate-800 text-purple-950 dark:text-purple-100 border border-purple-200 dark:border-purple-900/60 shadow-xs',
   ghost:
-    'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
+    'bg-transparent hover:bg-purple-100/60 dark:hover:bg-purple-950/40 text-purple-800 dark:text-purple-300 hover:text-purple-950 dark:hover:text-white',
   danger:
     'bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white shadow-sm shadow-rose-500/20 disabled:bg-rose-400',
   success:
     'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white shadow-sm shadow-emerald-500/20 disabled:bg-emerald-400',
+  gold:
+    'bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold shadow-sm shadow-amber-500/20 disabled:bg-amber-300',
   outline:
-    'bg-transparent border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800',
+    'bg-transparent border border-purple-300 dark:border-purple-800 text-purple-800 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/30',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -53,7 +55,7 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={isDisabled}
       className={[
         'inline-flex items-center justify-center font-semibold transition-all duration-150',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900',
         'disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none',
         'select-none active:scale-[0.98]',
         variantStyles[variant],
@@ -62,7 +64,7 @@ export const Button: React.FC<ButtonProps> = ({
       ].join(' ')}
     >
       {loading ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
       ) : (
         icon && iconPosition === 'left' && <span className="shrink-0">{icon}</span>
       )}

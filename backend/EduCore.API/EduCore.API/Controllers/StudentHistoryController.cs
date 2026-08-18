@@ -1,6 +1,8 @@
+using EduCore.API.Data;
 using EduCore.API.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EduCore.API.Controllers;
 
@@ -10,10 +12,12 @@ namespace EduCore.API.Controllers;
 public class StudentHistoryController : ControllerBase
 {
     private readonly IStudentHistoryService _service;
+    private readonly EduCoreDbContext _context;
 
-    public StudentHistoryController(IStudentHistoryService service)
+    public StudentHistoryController(IStudentHistoryService service, EduCoreDbContext context)
     {
         _service = service;
+        _context = context;
     }
 
     /// <summary>
@@ -39,22 +43,16 @@ public class StudentHistoryController : ControllerBase
     {
         var userIdClaim = User.FindFirst("UserId");
 
-        if (userIdClaim == null)
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
             return Unauthorized();
 
-        var userId = int.Parse(userIdClaim.Value);
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
 
-        // Resolve StudentId from UserId via the Students table
-        var studentIdClaim = User.FindFirst("StudentId");
+        if (student == null)
+            return NotFound(new { message = "Student account is not linked to a student record." });
 
-        // If the StudentId isn't in the token, we query the DB
-        // (The token may not carry StudentId, so we fall back to DB lookup)
-        if (studentIdClaim != null && int.TryParse(studentIdClaim.Value, out var sid))
-        {
-            var history = await _service.GetByStudentIdAsync(sid);
-            return Ok(history);
-        }
-
-        return BadRequest(new { message = "Student identity could not be resolved from token." });
+        var history = await _service.GetByStudentIdAsync(student.Id);
+        return Ok(history);
     }
 }

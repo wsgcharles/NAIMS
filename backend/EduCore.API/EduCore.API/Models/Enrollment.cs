@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using EduCore.API.Enums;
 
 namespace EduCore.API.Models;
@@ -11,11 +11,20 @@ public class Enrollment
     [MaxLength(30)]
     public string EnrollmentNumber { get; set; } = string.Empty;
 
-    public int StudentId { get; set; }
-    public Student Student { get; set; } = null!;
+    public int? StudentId { get; set; }
+    public Student? Student { get; set; }
 
-    public int SectionId { get; set; }
-    public Section Section { get; set; } = null!;
+    public int? EnrollmentApplicationId { get; set; }
+    public EnrollmentApplication? EnrollmentApplication { get; set; }
+
+    public int AcademicYearId { get; set; }
+    public AcademicYear AcademicYear { get; set; } = null!;
+
+    public int? GradeLevelId { get; set; }
+    public GradeLevel? GradeLevel { get; set; }
+
+    public int? SectionId { get; set; }
+    public Section? Section { get; set; }
 
     public EnrollmentType EnrollmentType { get; set; }
 

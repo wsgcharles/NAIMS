@@ -10,19 +10,23 @@ namespace EduCore.API.Services;
 public class TeacherDashboardService : ITeacherDashboardService
 {
     private readonly EduCoreDbContext _context;
+    private readonly INotificationService _notificationService;
+    private readonly IAuditLogService _auditLogService;
 
-    public TeacherDashboardService(EduCoreDbContext context)
+    public TeacherDashboardService(
+        EduCoreDbContext context,
+        INotificationService notificationService,
+        IAuditLogService auditLogService)
     {
         _context = context;
+        _notificationService = notificationService;
+        _auditLogService = auditLogService;
     }
 
     public async Task<List<MyClassResponse>> GetMyClassesAsync(int userId)
     {
-        // Find the logged-in teacher using the UserId from the JWT
         var teacher = await _context.Employees
-            .FirstOrDefaultAsync(x =>
-                x.UserId == userId &&
-                x.IsActive);
+            .FirstOrDefaultAsync(x => x.UserId == userId && x.IsActive);
 
         if (teacher == null)
             return new List<MyClassResponse>();
@@ -32,18 +36,13 @@ public class TeacherDashboardService : ITeacherDashboardService
             .Select(x => new MyClassResponse
             {
                 TeachingAssignmentId = x.Id,
-
                 SubjectId = x.SubjectId,
                 SubjectName = x.Subject.SubjectName,
-
                 SectionId = x.SectionId,
                 SectionName = x.Section.ProgramOffering.GradeLevel.Name + " - " + x.Section.SectionName,
-
                 AcademicYearId = x.Section.ProgramOffering.AcademicYearId,
                 AcademicYear = x.Section.ProgramOffering.AcademicYear.SchoolYear,
-
-                StudentCount = _context.Grades.Count(s =>
-                    s.TeachingAssignmentId == x.Id)
+                StudentCount = _context.Grades.Count(s => s.TeachingAssignmentId == x.Id)
             })
             .ToListAsync();
 
@@ -59,9 +58,7 @@ public class TeacherDashboardService : ITeacherDashboardService
             return new List<StudentClassResponse>();
 
         return await _context.Set<Enrollment>()
-            .Where(x =>
-                x.SectionId == assignment.SectionId &&
-                x.Status == EduCore.API.Enums.EnrollmentStatus.Approved)
+            .Where(x => x.SectionId == assignment.SectionId && x.Status == EnrollmentStatus.Approved)
             .Join(_context.Students,
                 ssa => ssa.StudentId,
                 student => student.Id,
@@ -83,59 +80,60 @@ public class TeacherDashboardService : ITeacherDashboardService
         if (assignment == null)
             return new List<TeacherGradeResponse>();
 
-        return await _context.Grades
-            .Where(g =>
-                g.TeachingAssignmentId == assignment.Id)
-            .Include(g => g.Enrollment)
-            .ThenInclude(e => e.Student)
+        var rawGrades = await _context.Grades
+            .Where(g => g.TeachingAssignmentId == assignment.Id)
+            .Include(g => g.Enrollment).ThenInclude(e => e.Student)
+            .ToListAsync();
+
+        var grades = rawGrades
             .Select(grade => new TeacherGradeResponse
             {
                 GradeId = grade.Id,
-
-                StudentId = grade.Enrollment.Student.Id,
-                StudentNumber = grade.Enrollment.Student.StudentNumber,
-                StudentName = grade.Enrollment.Student.FirstName + " " + grade.Enrollment.Student.LastName,
-
-                    PrelimGrade = grade.PrelimGrade,
-                    MidtermGrade = grade.MidtermGrade,
-                    FinalGrade = grade.FinalGrade,
-                    FinalAverage = grade.FinalAverage,
-                    Remarks = grade.IsCompleted ? "Completed" : "In Progress",
-
-                    IsReleased = grade.IsCompleted,
-                    DateEncoded = grade.CreatedAt
-                })
+                StudentId = grade.Enrollment?.Student?.Id ?? 0,
+                StudentNumber = grade.Enrollment?.Student?.StudentNumber ?? string.Empty,
+                StudentName = grade.Enrollment?.Student != null
+                    ? grade.Enrollment.Student.FirstName + " " + grade.Enrollment.Student.LastName
+                    : "Unknown Student",
+                PrelimGrade = grade.PrelimGrade,
+                MidtermGrade = grade.MidtermGrade,
+                FinalGrade = grade.FinalGrade,
+                FinalAverage = grade.FinalAverage,
+                Remarks = grade.Remarks ?? "",
+                Status = grade.Status.ToString(),
+                SubmittedAt = grade.SubmittedAt,
+                ApprovedAt = grade.ApprovedAt,
+                ReviewerRemarks = grade.ReviewerRemarks,
+                CanEdit = grade.Status == GradeStatus.Draft || grade.Status == GradeStatus.Rejected,
+                IsReleased = grade.Status == GradeStatus.Released,
+                DateEncoded = grade.CreatedAt
+            })
             .OrderBy(x => x.StudentName)
-            .ToListAsync();
+            .ToList();
 
+        return grades;
     }
 
-    public async Task<bool> UpdateGradeAsync(
-    int userId,
-    int gradeId,
-    UpdateTeacherGradeRequest request)
+    public async Task<bool> UpdateGradeAsync(int userId, int gradeId, UpdateTeacherGradeRequest request)
     {
-        // Find the teacher linked to the logged-in user
         var teacher = await _context.Employees
-            .FirstOrDefaultAsync(x =>
-                x.UserId == userId &&
-                x.Position == "Teacher");
+            .FirstOrDefaultAsync(x => x.UserId == userId && (x.Position.Contains("Teacher") || x.Position.Contains("Principal")));
 
-        if (teacher == null)
-            return false;
+        if (teacher == null) return false;
 
-        var grade = await _context.Grades
-            .FirstOrDefaultAsync(x => x.Id == gradeId);
+        var grade = await _context.Grades.FirstOrDefaultAsync(x => x.Id == gradeId);
+        if (grade == null) return false;
 
-        if (grade == null)
-            return false;
-
-        // Verify this teacher owns the grade
         var teachingAssignment = await _context.TeachingAssignments
             .FirstOrDefaultAsync(x => x.Id == grade.TeachingAssignmentId);
-            
+
         if (teachingAssignment == null || teachingAssignment.EmployeeId != teacher.Id)
             return false;
+
+        // Block editing if grades are already submitted, approved, or released!
+        if (grade.Status == GradeStatus.Submitted || grade.Status == GradeStatus.Approved || grade.Status == GradeStatus.Released)
+        {
+            throw new InvalidOperationException($"Grades cannot be edited while in '{grade.Status}' status. Only Draft or Rejected grades can be edited.");
+        }
 
         grade.PrelimGrade = request.PrelimGrade;
         grade.MidtermGrade = request.MidtermGrade;
@@ -150,66 +148,115 @@ public class TeacherDashboardService : ITeacherDashboardService
             grade.FinalAverage = null;
         }
 
-        grade.UpdatedAt = DateTime.UtcNow;
+        if (grade.Status == GradeStatus.Rejected)
+        {
+            // Reset to Draft upon edit so teacher can review before resubmitting
+            grade.Status = GradeStatus.Draft;
+        }
 
+        grade.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
         return true;
     }
 
-    public async Task<bool> ReleaseGradesAsync(
-     int userId,
-     int teachingAssignmentId,
-     bool isReleased)
+    public async Task<bool> SubmitGradesForApprovalAsync(int userId, int teachingAssignmentId)
     {
-        Console.WriteLine($"UserId from JWT: {userId}");
-
         var teacher = await _context.Employees
-            .FirstOrDefaultAsync(x =>
-                x.UserId == userId &&
-                x.Position == "Teacher");
+            .FirstOrDefaultAsync(x => x.UserId == userId && (x.Position.Contains("Teacher") || x.Position.Contains("Principal")));
 
-        if (teacher == null)
-        {
-            Console.WriteLine("Teacher NOT FOUND");
-            return false;
-        }
-
-        Console.WriteLine($"TeacherId = {teacher.Id}");
+        if (teacher == null) return false;
 
         var assignment = await _context.TeachingAssignments
-            .FirstOrDefaultAsync(x =>
-                x.Id == teachingAssignmentId &&
-                x.EmployeeId == teacher.Id);
+            .Include(t => t.Subject)
+            .Include(t => t.Section)
+            .FirstOrDefaultAsync(x => x.Id == teachingAssignmentId && x.EmployeeId == teacher.Id);
 
-        if (assignment == null)
-        {
-            Console.WriteLine("Teaching Assignment NOT FOUND");
-            return false;
-        }
-
-        Console.WriteLine($"Assignment = {assignment.Id}");
+        if (assignment == null) return false;
 
         var grades = await _context.Grades
-            .Where(g =>
-                g.TeachingAssignmentId == assignment.Id)
+            .Where(g => g.TeachingAssignmentId == assignment.Id && (g.Status == GradeStatus.Draft || g.Status == GradeStatus.Rejected))
             .ToListAsync();
 
-        Console.WriteLine($"Grades found = {grades.Count}");
+        if (!grades.Any()) return false;
 
-        if (!grades.Any())
+        var now = DateTime.UtcNow;
+        foreach (var grade in grades)
         {
-            Console.WriteLine("NO MATCHING GRADES");
-            return false;
+            grade.Status = GradeStatus.Submitted;
+            grade.SubmittedAt = now;
+            grade.UpdatedAt = now;
         }
+
+        await _context.SaveChangesAsync();
+
+        // Audit Log
+        try
+        {
+            await _auditLogService.LogAsync(
+                "Grades Submitted",
+                $"Grades submitted for approval by {teacher.FirstName} {teacher.LastName} for {assignment.Subject.SubjectName} ({assignment.Section.SectionName}).",
+                userId.ToString(),
+                "Grades"
+            );
+
+            // Notify Vice Principal / Academic Head / Registrar
+            await _notificationService.CreateAsync(new CreateNotificationRequest
+            {
+                TargetRole = "Administrator",
+                Title = "Grades Pending Review",
+                Message = $"Teacher {teacher.FirstName} {teacher.LastName} submitted grades for {assignment.Subject.SubjectName} ({assignment.Section.SectionName}).",
+                Type = "Info"
+            });
+        }
+        catch { }
+
+        return true;
+    }
+
+    public async Task<bool> ReleaseGradesAsync(int userId, int teachingAssignmentId, bool isReleased)
+    {
+        var teacher = await _context.Employees
+            .FirstOrDefaultAsync(x => x.UserId == userId);
+
+        if (teacher == null) return false;
+
+        var assignment = await _context.TeachingAssignments
+            .FirstOrDefaultAsync(x => x.Id == teachingAssignmentId);
+
+        if (assignment == null) return false;
+
+        var grades = await _context.Grades
+            .Include(g => g.Enrollment).ThenInclude(e => e.Student)
+            .Include(g => g.TeachingAssignment).ThenInclude(t => t.Subject)
+            .Where(g => g.TeachingAssignmentId == assignment.Id)
+            .ToListAsync();
+
+        if (!grades.Any()) return false;
 
         foreach (var grade in grades)
         {
+            grade.Status = isReleased ? GradeStatus.Released : GradeStatus.Approved;
             grade.IsCompleted = isReleased;
             grade.UpdatedAt = DateTime.UtcNow;
         }
 
         await _context.SaveChangesAsync();
+
+        if (isReleased)
+        {
+            foreach (var grade in grades)
+            {
+                if (grade.Enrollment?.Student != null && grade.Enrollment.Student.UserId.HasValue)
+                {
+                    await _notificationService.NotifyUserAsync(
+                        grade.Enrollment.Student.UserId.Value,
+                        "Grades Released",
+                        $"Your official grade for {grade.TeachingAssignment.Subject.SubjectName} has been released.",
+                        "Success");
+                }
+            }
+        }
 
         return true;
     }

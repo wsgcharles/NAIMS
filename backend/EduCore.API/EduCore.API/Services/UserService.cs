@@ -10,13 +10,16 @@ public class UserService : IUserService
 {
     private readonly EduCoreDbContext _context;
     private readonly IPasswordService _passwordService;
+    private readonly IAuditLogService _auditLogService;
 
     public UserService(
         EduCoreDbContext context,
-        IPasswordService passwordService)
+        IPasswordService passwordService,
+        IAuditLogService auditLogService)
     {
         _context = context;
         _passwordService = passwordService;
+        _auditLogService = auditLogService;
     }
 
     public async Task<List<UserResponse>> GetAllAsync()
@@ -110,6 +113,8 @@ public class UserService : IUserService
 
         await _context.SaveChangesAsync();
 
+        await _auditLogService.LogAsync("User.ToggleStatus", "User", id.ToString(), $"User {user.Email} set to {(user.IsActive ? "Active" : "Inactive")}.");
+
         return true;
     }
 
@@ -123,6 +128,8 @@ public class UserService : IUserService
         _context.Users.Remove(user);
 
         await _context.SaveChangesAsync();
+
+        await _auditLogService.LogAsync("User.Delete", "User", id.ToString(), $"Deleted user account {user.Email}.");
 
         return true;
     }

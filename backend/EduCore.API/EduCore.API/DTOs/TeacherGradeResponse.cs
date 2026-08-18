@@ -20,6 +20,18 @@ public class TeacherGradeResponse
 
     public string Remarks { get; set; } = string.Empty;
 
+    /// <summary>Workflow status: Draft, Submitted, Approved, Released, Rejected</summary>
+    public string Status { get; set; } = "Draft";
+
+    public DateTime? SubmittedAt { get; set; }
+
+    public DateTime? ApprovedAt { get; set; }
+
+    public string? ReviewerRemarks { get; set; }
+
+    /// <summary>True if Status is Draft or Rejected</summary>
+    public bool CanEdit { get; set; } = true;
+
     public bool IsReleased { get; set; }
 
     public DateTime DateEncoded { get; set; }

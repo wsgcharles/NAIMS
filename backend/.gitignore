@@ -13,7 +13,15 @@ obj/
 # Logs
 *.log
 
-# ASP.NET
+# ASP.NET Core — SECURITY: appsettings files contain secrets (SMTP, JWT, DB passwords).
+# Never commit appsettings.json or any environment-specific appsettings to source control.
+# Use environment variables or a secrets manager in production.
+# Use `dotnet user-secrets` in development.
+#
+# EXCEPTION: appsettings.Production.json IS intentionally tracked because it contains
+# only safe placeholders and non-secret configuration. All real secrets are injected
+# via the cloud host's environment variable system (Render/Railway/Azure).
+appsettings.json
 appsettings.Development.json
 
 # Node
@@ -21,7 +29,13 @@ node_modules/
 
 # Environment
 .env
+.env.local
+.env.*.local
 
 # OS
 .DS_Store
 Thumbs.db
+
+# User-uploaded files — NEVER commit real student documents to source control.
+# These are stored at runtime and may contain sensitive personal data (PDFs, IDs, photos).
+EduCore.API/EduCore.API/wwwroot/uploads/

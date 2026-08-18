@@ -107,7 +107,7 @@ export const GradeManagementPage: React.FC = () => {
               filtered.map((g) => (
                 <tr key={g.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
                   <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">{g.studentName}</td>
-                  <td className="px-6 py-4 text-xs font-bold text-blue-600 dark:text-blue-400">{g.subjectName}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-purple-700 dark:text-purple-400">{g.subjectName}</td>
                   <td className="px-6 py-4 text-xs text-slate-500">{g.teacherName}</td>
                   <td className="px-6 py-4 text-center text-xs">{fmt(g.prelimGrade)}</td>
                   <td className="px-6 py-4 text-center text-xs">{fmt(g.midtermGrade)}</td>

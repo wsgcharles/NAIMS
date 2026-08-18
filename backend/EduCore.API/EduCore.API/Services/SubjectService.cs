@@ -19,6 +19,7 @@ public class SubjectService : ISubjectService
     {
         return await _context.Subjects
             .Include(s => s.GradeLevel)
+            .Include(s => s.Program)
             .OrderBy(x => x.GradeLevel.Name)
             .ThenBy(x => x.SubjectName)
             .Select(s => new SubjectResponse
@@ -28,7 +29,14 @@ public class SubjectService : ISubjectService
                 SubjectName = s.SubjectName,
                 GradeLevelId = s.GradeLevelId,
                 GradeLevel = s.GradeLevel.Name,
+                ProgramId = s.ProgramId,
+                ProgramCode = s.Program != null ? s.Program.Code : null,
+                ProgramName = s.Program != null ? s.Program.Name : null,
                 IsCoreSubject = s.IsCoreSubject,
+                CurriculumVersion = s.CurriculumVersion,
+                SubjectType = s.SubjectType,
+                Semester = s.Semester,
+                DomainCategory = s.DomainCategory,
                 Units = s.Units,
                 IsActive = s.IsActive
             })
@@ -52,12 +60,30 @@ public class SubjectService : ISubjectService
         if (gradeLevel == null)
             throw new Exception("Grade level not found.");
 
+        // Validation Rule: For Grades 1-10, ProgramId must be null
+        int? programId = request.ProgramId;
+        if (gradeLevel.EducationLevel != Enums.EducationLevel.SeniorHighSchool)
+        {
+            programId = null;
+        }
+
+        if (programId.HasValue)
+        {
+            var program = await _context.Programs.FindAsync(programId.Value);
+            if (program == null) throw new Exception("Selected strand / academic program not found.");
+        }
+
         var subject = new Subject
         {
             SubjectCode = request.SubjectCode,
             SubjectName = request.SubjectName,
             GradeLevelId = request.GradeLevelId,
+            ProgramId = programId,
             IsCoreSubject = request.IsCoreSubject,
+            CurriculumVersion = string.IsNullOrWhiteSpace(request.CurriculumVersion) ? "MATATAG-K10" : request.CurriculumVersion,
+            SubjectType = string.IsNullOrWhiteSpace(request.SubjectType) ? "Core" : request.SubjectType,
+            Semester = request.Semester,
+            DomainCategory = request.DomainCategory,
             Units = request.Units,
             IsActive = true
         };
@@ -81,10 +107,28 @@ public class SubjectService : ISubjectService
         if (gradeLevel == null)
             throw new Exception("Grade level not found.");
 
+        // Validation Rule: For Grades 1-10, ProgramId must be null
+        int? programId = request.ProgramId;
+        if (gradeLevel.EducationLevel != Enums.EducationLevel.SeniorHighSchool)
+        {
+            programId = null;
+        }
+
+        if (programId.HasValue)
+        {
+            var program = await _context.Programs.FindAsync(programId.Value);
+            if (program == null) throw new Exception("Selected strand / academic program not found.");
+        }
+
         subject.SubjectCode = request.SubjectCode;
         subject.SubjectName = request.SubjectName;
         subject.GradeLevelId = request.GradeLevelId;
+        subject.ProgramId = programId;
         subject.IsCoreSubject = request.IsCoreSubject;
+        if (!string.IsNullOrWhiteSpace(request.CurriculumVersion)) subject.CurriculumVersion = request.CurriculumVersion;
+        if (!string.IsNullOrWhiteSpace(request.SubjectType)) subject.SubjectType = request.SubjectType;
+        subject.Semester = request.Semester;
+        subject.DomainCategory = request.DomainCategory;
         subject.Units = request.Units;
         subject.IsActive = request.IsActive;
 

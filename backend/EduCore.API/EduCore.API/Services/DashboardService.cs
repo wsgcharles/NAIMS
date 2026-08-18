@@ -154,8 +154,9 @@ public class DashboardService : IDashboardService
             .Select(t => new
             {
                 EmployeeId = t.EmployeeId,
-                TeacherName  = t.Employee.FirstName + " " + t.Employee.LastName,
-                SubjectName  = t.Subject.SubjectName
+                TeacherName  = t.Employee != null ? $"{t.Employee.FirstName} {t.Employee.LastName}".Trim() : "Unassigned Faculty",
+                SubjectName  = t.Subject != null ? t.Subject.SubjectName : "Subject"
+
             })
             .ToListAsync();
 

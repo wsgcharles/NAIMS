@@ -1,10 +1,13 @@
-﻿namespace EduCore.API.Enums;
+namespace EduCore.API.Enums;
 
 public enum StudentStatus
 {
     Active,
+    Enrolled,
     Inactive,
-    Graduated,
+    LeaveOfAbsence,
+    Transferred,
     Dropped,
-    Transferred
+    Graduated,
+    Archived
 }

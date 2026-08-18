@@ -101,4 +101,19 @@ public class StudentDashboardController : ControllerBase
         var ledger = await _accountingService.GetStudentLedgerAsync(student.Id);
         return Ok(ledger);
     }
+
+    [HttpGet("GradeSlip")]
+    public async Task<IActionResult> GetGradeSlip()
+    {
+        var userIdClaim = User.FindFirst("UserId");
+        if (userIdClaim == null) return Unauthorized();
+
+        var userId = int.Parse(userIdClaim.Value);
+        var pdfBytes = await _service.GenerateGradeSlipPdfAsync(userId);
+
+        if (pdfBytes == null)
+            return NotFound(new { message = "Student not found." });
+
+        return File(pdfBytes, "application/pdf", "OfficialGradeSlip.pdf");
+    }
 }

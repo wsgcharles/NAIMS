@@ -10,15 +10,18 @@ public class StudentService : IStudentService
     private readonly EduCoreDbContext _context;
     private readonly IPasswordService _passwordService;
     private readonly IStudentHistoryService _historyService;
+    private readonly IAuditLogService _auditLogService;
 
     public StudentService(
     EduCoreDbContext context,
     IPasswordService passwordService,
-    IStudentHistoryService historyService)
+    IStudentHistoryService historyService,
+    IAuditLogService auditLogService)
     {
         _context = context;
         _passwordService = passwordService;
         _historyService = historyService;
+        _auditLogService = auditLogService;
     }
     public async Task<List<StudentResponse>> GetAllAsync()
     {
@@ -31,7 +34,19 @@ public class StudentService : IStudentService
                 StudentNumber = s.StudentNumber,
                 LRN = s.LRN,
                 FullName = $"{s.FirstName} {s.LastName}",
+                FirstName = s.FirstName,
+                MiddleName = s.MiddleName,
+                LastName = s.LastName,
+                Suffix = s.Suffix,
+                BirthDate = s.BirthDate,
+                Gender = s.Gender.ToString(),
                 Email = s.Email,
+                PhoneNumber = s.PhoneNumber,
+                Address = s.Address,
+                Barangay = s.Barangay,
+                City = s.City,
+                Province = s.Province,
+                ParentId = s.ParentId,
                 IsActive = s.Status == EduCore.API.Enums.StudentStatus.Active
             })
             .ToListAsync();
@@ -50,7 +65,19 @@ public class StudentService : IStudentService
             StudentNumber = student.StudentNumber,
             LRN = student.LRN,
             FullName = $"{student.FirstName} {student.LastName}",
+            FirstName = student.FirstName,
+            MiddleName = student.MiddleName,
+            LastName = student.LastName,
+            Suffix = student.Suffix,
+            BirthDate = student.BirthDate,
+            Gender = student.Gender.ToString(),
             Email = student.Email,
+            PhoneNumber = student.PhoneNumber,
+            Address = student.Address,
+            Barangay = student.Barangay,
+            City = student.City,
+            Province = student.Province,
+            ParentId = student.ParentId,
             IsActive = student.Status == EduCore.API.Enums.StudentStatus.Active
         };
     }
@@ -125,13 +152,27 @@ public class StudentService : IStudentService
 
         await _context.SaveChangesAsync();
 
+            await _auditLogService.LogAsync("Student.Create", "Student", student.Id.ToString(), $"Created student {student.FirstName} {student.LastName} ({student.StudentNumber}).");
+
             return new StudentResponse
             {
                 Id = student.Id,
                 StudentNumber = student.StudentNumber,
                 LRN = student.LRN,
                 FullName = $"{student.FirstName} {student.LastName}",
+                FirstName = student.FirstName,
+                MiddleName = student.MiddleName,
+                LastName = student.LastName,
+                Suffix = student.Suffix,
+                BirthDate = student.BirthDate,
+                Gender = student.Gender.ToString(),
                 Email = student.Email,
+                PhoneNumber = student.PhoneNumber,
+                Address = student.Address,
+                Barangay = student.Barangay,
+                City = student.City,
+                Province = student.Province,
+                ParentId = student.ParentId,
                 IsActive = student.Status == EduCore.API.Enums.StudentStatus.Active,
 
                 TemporaryPassword = temporaryPassword
@@ -165,13 +206,27 @@ public class StudentService : IStudentService
 
         await _context.SaveChangesAsync();
 
+        await _auditLogService.LogAsync("Student.Update", "Student", student.Id.ToString(), $"Updated student {student.FirstName} {student.LastName}.");
+
         return new StudentResponse
         {
             Id = student.Id,
             StudentNumber = student.StudentNumber,
             LRN = student.LRN,
             FullName = $"{student.FirstName} {student.LastName}",
+            FirstName = student.FirstName,
+            MiddleName = student.MiddleName,
+            LastName = student.LastName,
+            Suffix = student.Suffix,
+            BirthDate = student.BirthDate,
+            Gender = student.Gender.ToString(),
             Email = student.Email,
+            PhoneNumber = student.PhoneNumber,
+            Address = student.Address,
+            Barangay = student.Barangay,
+            City = student.City,
+            Province = student.Province,
+            ParentId = student.ParentId,
             IsActive = student.Status == EduCore.API.Enums.StudentStatus.Active
         };
     }
@@ -187,6 +242,8 @@ public class StudentService : IStudentService
 
         await _context.SaveChangesAsync();
 
+        await _auditLogService.LogAsync("Student.Delete", "Student", id.ToString(), $"Deleted student {student.FirstName} {student.LastName}.");
+
         return true;
     }
 
@@ -197,11 +254,13 @@ public class StudentService : IStudentService
         if (student == null)
             return false;
 
-        student.Status = student.Status == EduCore.API.Enums.StudentStatus.Active 
-            ? EduCore.API.Enums.StudentStatus.Inactive 
+        student.Status = student.Status == EduCore.API.Enums.StudentStatus.Active
+            ? EduCore.API.Enums.StudentStatus.Inactive
             : EduCore.API.Enums.StudentStatus.Active;
 
         await _context.SaveChangesAsync();
+
+        await _auditLogService.LogAsync("Student.ToggleStatus", "Student", id.ToString(), $"Student {student.FirstName} {student.LastName} set to {student.Status}.");
 
         return true;
     }

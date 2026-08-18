@@ -1,9 +1,10 @@
-﻿namespace EduCore.API.Enums;
+namespace EduCore.API.Enums;
 
 public enum EnrollmentType
 {
-    New,
-    Old,
-    Transferee,
-    Returnee
+    New = 0,
+    Old = 1,
+    Transferee = 2,
+    Returnee = 3,
+    Returning = 3
 }

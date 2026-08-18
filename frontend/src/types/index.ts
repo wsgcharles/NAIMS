@@ -74,6 +74,9 @@ export interface LoginResponse {
   token: string;
   refreshToken?: string;
   userId: string;
+  fullName?: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   role: string;
   mustChangePassword: boolean;
@@ -84,6 +87,7 @@ export interface CurrentUser {
   id: string;
   email: string;
   role: UserRoleString;
+  fullName?: string;
   firstName?: string;
   lastName?: string;
   mustChangePassword: boolean;
@@ -100,9 +104,14 @@ export interface ForgotPasswordRequest {
   email: string;
 }
 
+export interface VerifyResetCodeRequest {
+  email: string;
+  code: string;
+}
+
 export interface ResetPasswordRequest {
   email: string;
-  token: string;
+  code: string;
   newPassword: string;
 }
 
@@ -274,7 +283,18 @@ export interface AcademicYearRecord {
   schoolYear: string;
   startDate: string;
   endDate: string;
+  status: 'Upcoming' | 'Current' | 'Completed' | 'Archived' | string;
   isActive: boolean;
+  enrollmentStartDate?: string | null;
+  enrollmentEndDate?: string | null;
+  isEnrollmentOpen: boolean;
+  isReturningEnrollmentOpen: boolean;
+  currentSemester: string;
+  classesStartDate?: string | null;
+  classesEndDate?: string | null;
+  graduationDate?: string | null;
+  createdAt?: string;
+  updatedAt?: string | null;
 }
 
 export interface LedgerTransaction {
@@ -320,8 +340,36 @@ export interface TeacherGrade {
   finalGrade: number | null;
   finalAverage: number | null;
   remarks: string;
+  status: 'Draft' | 'Submitted' | 'Approved' | 'Released' | 'Rejected' | string;
+  submittedAt?: string | null;
+  approvedAt?: string | null;
+  reviewerRemarks?: string | null;
+  canEdit: boolean;
   isReleased: boolean;
   dateEncoded: string;
+}
+
+export interface GradeApprovalItem {
+  gradeId: number;
+  teachingAssignmentId: number;
+  studentName: string;
+  studentNumber: string;
+  subjectCode: string;
+  subjectName: string;
+  teacherName: string;
+  sectionName: string;
+  gradeLevelName: string;
+  academicYear: string;
+  semester: string;
+  prelimGrade: number | null;
+  midtermGrade: number | null;
+  finalGrade: number | null;
+  finalAverage: number | null;
+  status: 'Draft' | 'Submitted' | 'Approved' | 'Released' | 'Rejected' | string;
+  submittedAt?: string | null;
+  approvedAt?: string | null;
+  approvedByTeacherOrAdmin?: string | null;
+  reviewerRemarks?: string | null;
 }
 
 // Registrar Module Entities (mirrors EduCore.API DTOs — EnrollmentController,
@@ -338,12 +386,22 @@ export interface EnrollmentApplication {
   applicationNumber: string;
   fullName: string;
   gradeApplyingFor: string;
+  track?: string | null;
+  strand?: string | null;
   previousSchool: string;
   email: string;
+  parentName?: string;
+  parentContact?: string;
+  parentEmail?: string;
+  relationship?: string;
   status: EnrollmentApplicationStatusString;
   isApproved: boolean;
+  hasRegistrarVerificationSlip?: boolean;
+  verificationSlipNumber?: string;
   createdAt: string;
 }
+
+
 
 export interface RegistrarStudent {
   studentId: number;
@@ -365,15 +423,84 @@ export interface StudentHistoryEntry {
   performedBy: string | null;
 }
 
+export interface SectionEnrolledStudent {
+  studentId: number;
+  studentNumber: string;
+  fullName: string;
+  gender: string;
+  assignedAt: string;
+}
+
+
 export interface SectionOption {
   id: number;
   programOfferingId: number;
   programOfferingName: string;
+  academicYearId: number;
+  schoolYear: string;
+  semester: string;
+  gradeLevelId: number;
+  gradeLevelName: string;
+  programId?: number | null;
+  trackCode: string;
+  strandCode: string;
   sectionName: string;
   capacity: number;
   currentStudents: number;
+  remainingSlots: number;
+  adviserEmployeeId?: number | null;
+  adviserName: string;
+  hasAdviser: boolean;
+  isActive: boolean;
+  status: string;
+  readinessStatus: 'Ready' | 'Warning' | 'Incomplete' | 'Full' | string;
+  sectionHealth: 'Excellent' | 'Good' | 'Needs Attention' | 'Configuration Required' | string;
+  assignedSubjectsCount: number;
+  requiredSubjectsCount: number;
+  assignedTeachersCount: number;
+  requiredTeachersCount: number;
+  isSubjectComplete: boolean;
+  isTeacherComplete: boolean;
+  subjects: SectionSubjectDetail[];
+  enrolledStudents: SectionEnrolledStudent[];
+}
+
+export interface SectionStats {
+  totalSections: number;
+  activeSections: number;
+  fullSections: number;
+  sectionsMissingAdviser: number;
+  sectionsMissingTeachers: number;
+  averageUtilization: number;
+}
+
+export interface CreateSectionPayload {
+  programOfferingId?: number;
+  academicYearId?: number;
+  gradeLevelId?: number;
+  programId?: number;
+  sectionName: string;
+  capacity: number;
+  adviserEmployeeId?: number | null;
+  isActive?: boolean;
+}
+
+export interface UpdateSectionPayload {
+  programOfferingId?: number;
+  academicYearId?: number;
+  gradeLevelId?: number;
+  programId?: number;
+  sectionName: string;
+  capacity: number;
+  adviserEmployeeId?: number | null;
   isActive: boolean;
 }
+
+export interface AssignSectionTeacherPayload {
+  subjectId: number;
+  employeeId: number;
+}
+
 
 export interface EmployeeDirectoryEntry {
   id: number;
@@ -544,6 +671,7 @@ export interface SchoolSettings {
   currentAcademicYearName: string | null;
   officialReceiptPrefix: string;
   studentNumberPrefix: string;
+  studentNumberCounterLength: number;
   billNumberPrefix: string;
   paymentNumberPrefix: string;
   currency: string;
@@ -670,6 +798,43 @@ export interface AccountingDashboard {
   recentPayments: FinancePayment[];
 }
 
+export interface AccountingQueueItem {
+  applicationId: number;
+  applicationNumber: string;
+  applicantName: string;
+  gradeApplyingFor: string;
+  schoolYear: string;
+  verificationSlipNumber: string;
+  dateVerified: string | null;
+  assignedRegistrar: string;
+  status: string;
+  queueStage: 'ReadyForAssessment' | 'AssessmentInProgress' | 'Paid';
+  financialClearanceStatus: string;
+  billId: number | null;
+  totalBilled: number;
+  totalPaid: number;
+  remainingBalance: number;
+}
+
+export interface GenerateAssessmentPayload {
+  applicationId: number;
+  tuitionFee: number;
+  miscellaneousFee: number;
+  laboratoryFee: number;
+  booksFee: number;
+  voucherAmount: number;
+  discountAmount: number;
+  discountRemarks?: string;
+  dueDate?: string;
+}
+
+export interface PaymentAdjustmentPayload {
+  paymentId: number;
+  newAmount: number;
+  reason: string;
+  approvedByEmployeeId?: number;
+}
+
 // Student Portal Entities (mirrors EduCore.API DTOs — StudentDashboardController, StudentHistoryController)
 
 export interface StudentPortalProfile {
@@ -697,4 +862,137 @@ export interface StudentPortalGrade {
   midtermGrade: number | null;
   finalGrade: number | null;
   remarks: string;
+}
+
+export interface AdminAnnouncement {
+  id: number;
+  title: string;
+  content: string;
+  category: string;
+  targetRoles: string;
+  isPublished: boolean;
+  publishedAt: string | null;
+  isArchived: boolean;
+  createdByEmployeeName?: string;
+  createdAt?: string;
+}
+
+export interface CreateAnnouncementPayload {
+  title: string;
+  content: string;
+  category: string;
+  targetRoles: string;
+  createdByEmployeeId?: number;
+}
+
+export interface AdminAuditLog {
+  id: number;
+  userEmail: string | null;
+  action: string;
+  entityType: string | null;
+  entityId: string | null;
+  details: string | null;
+  ipAddress: string | null;
+  timestamp: string;
+}
+
+export interface PagedAuditLogResponse {
+  items: AdminAuditLog[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface ReportsOverview {
+  availableTemplatesCount: number;
+  generatedThisMonthCount: number;
+  totalActiveStudents: number;
+  totalActiveEmployees: number;
+  totalRevenueCollected: number;
+  totalOutstandingBalance: number;
+}
+
+export interface StudentReportItem {
+  studentId: number;
+  studentNumber: string;
+  fullName: string;
+  gradeLevel: string;
+  section: string;
+  status: string;
+}
+
+export interface TeacherReportItem {
+  employeeId: number;
+  employeeNumber: string;
+  fullName: string;
+  position: string;
+  department: string;
+  email: string;
+  isActive: boolean;
+}
+
+export interface FinanceReportItem {
+  transactionId: number;
+  referenceNumber: string;
+  studentName: string;
+  amount: number;
+  paymentMethod: string;
+  paymentDate: string;
+}
+
+export interface GradeReportItem {
+  subjectCode: string;
+  subjectName: string;
+  averageGrade: number;
+  passingRate: number;
+  enrolledStudentsCount: number;
+}
+
+export interface SectionSubjectDetail {
+  subjectId: number;
+  subjectCode: string;
+  subjectName: string;
+  units: number;
+  isCoreSubject?: boolean;
+  teacherEmployeeId?: number;
+  teacherName: string;
+  hasTeacher: boolean;
+}
+
+
+export interface AvailableSection {
+  sectionId: number;
+  sectionName: string;
+  recommended: boolean;
+  recommendationSummary: string;
+  recommendationReasons: string[];
+  readinessStatus: 'Ready' | 'Warning' | 'Incomplete' | 'Full';
+  sectionHealth: 'Excellent' | 'Good' | 'Needs Attention' | 'Configuration Required';
+  remainingSlots: number;
+  capacity: number;
+  currentEnrollment: number;
+  enrollmentPercentage: number;
+  adviserName: string;
+  adviserEmployeeId?: number;
+  hasAdviser: boolean;
+  assignedSubjects: number;
+  requiredSubjects: number;
+  assignedTeachers: number;
+  requiredTeachers: number;
+  isSubjectComplete: boolean;
+  isTeacherComplete: boolean;
+  schoolYear: string;
+  gradeLevelName: string;
+  trackCode: string;
+  strandCode: string;
+  subjects: SectionSubjectDetail[];
+  warnings: string[];
+  reasonsNotSelectable: string[];
+  isSelectable: boolean;
+}
+
+export interface SectionValidationResult {
+  isValid: boolean;
+  code: string;
+  errors: string[];
 }

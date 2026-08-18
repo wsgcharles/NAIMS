@@ -12,8 +12,14 @@ public class StudentBill
     [MaxLength(50)]
     public string BillNumber { get; set; } = string.Empty;
 
-    public int EnrollmentId { get; set; }
-    public Enrollment Enrollment { get; set; } = null!;
+    public int? EnrollmentId { get; set; }
+    public Enrollment? Enrollment { get; set; }
+
+    public int? EnrollmentApplicationId { get; set; }
+    public EnrollmentApplication? EnrollmentApplication { get; set; }
+
+    [MaxLength(50)]
+    public string FinancialClearanceStatus { get; set; } = "Pending";
 
     [Column(TypeName = "decimal(18,2)")]
     public decimal SubTotal { get; set; }

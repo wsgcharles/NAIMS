@@ -11,6 +11,7 @@ import type {
   AcademicYearRecord,
   ApproveAndEnrollResult,
   FrontendEnrollmentType,
+  AvailableSection,
 } from '../types';
 import { toast } from 'sonner';
 
@@ -65,18 +66,23 @@ export const useRegistrarApi = () => {
         employeeId: number;
         sectionId: number;
         enrollmentType: FrontendEnrollmentType;
+        createParentPortal?: boolean;
       }): Promise<ApproveAndEnrollResult> => {
         const response = await apiClient.put<ApproveAndEnrollResult>(
-          `/Enrollment/${payload.applicationId}/approve-and-enroll`,
+          `/Enrollment/${payload.applicationId}/assign-section`,
           {
             lrn: payload.lrn,
             employeeId: payload.employeeId,
             sectionId: payload.sectionId,
             enrollmentType: payload.enrollmentType,
+            createParentPortal: payload.createParentPortal ?? true,
           }
         );
         return response.data;
       },
+
+
+
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.registrar.applications });
         queryClient.invalidateQueries({ queryKey: queryKeys.registrar.students });
@@ -113,13 +119,41 @@ export const useRegistrarApi = () => {
       queryKey: queryKeys.registrar.currentEmployee,
       queryFn: async (): Promise<number | null> => {
         const response = await apiClient.get<EmployeeDirectoryEntry[]>('/Employees');
-        const match = response.data.find(
-          (e) => e.email.toLowerCase() === (user?.email ?? '').toLowerCase()
+        if (!response.data || response.data.length === 0) return null;
+
+        // 1. Primary match by UserId (User.Id -> Employee.UserId)
+        let match = response.data.find(
+          (e) => user?.id && (e as any).userId != null && Number((e as any).userId) === Number(user.id)
         );
+
+        // 2. Secondary match by Email
+        if (!match && user?.email) {
+          match = response.data.find(
+            (e) => e.email.toLowerCase().trim() === user.email.toLowerCase().trim()
+          );
+        }
+
+        // 3. Staff Role match (Find active employee record corresponding to the authenticated staff role)
+        if (!match && user?.role) {
+          const userRoleStr = (user.role || '').toString().toLowerCase();
+          match = response.data.find(
+            (e) =>
+              (e as any).isActive !== false &&
+              (((e as any).role || '').toString().toLowerCase() === userRoleStr ||
+                ((e as any).role || '').toString().toLowerCase() === 'registrar' ||
+                ((e as any).role || '').toString().toLowerCase() === 'administrator' ||
+                ((e as any).role || '').toString().toLowerCase() === 'superadministrator')
+          );
+        }
+
         return match?.id ?? null;
       },
-      enabled: !!user?.email,
+      enabled: !!user?.id || !!user?.email || !!user?.role,
     });
+
+
+
+
 
   const useStudents = () =>
     useQuery({
@@ -200,12 +234,34 @@ export const useRegistrarApi = () => {
       },
     });
 
+  const usePendingSectionAssignmentQueue = () =>
+    useQuery({
+      queryKey: ['registrar', 'pending-section-assignment'],
+      queryFn: async (): Promise<EnrollmentApplication[]> => {
+        const response = await apiClient.get<EnrollmentApplication[]>('/Enrollment/pending-section-assignment');
+        return response.data;
+      },
+    });
+
+  const useAvailableSectionsForEnrollment = (applicationId: number | null) =>
+    useQuery({
+      queryKey: ['sections', 'available-for-enrollment', applicationId],
+      queryFn: async (): Promise<AvailableSection[]> => {
+        if (!applicationId) return [];
+        const response = await apiClient.get<AvailableSection[]>(`/Sections/available-for-enrollment/${applicationId}`);
+        return response.data;
+      },
+      enabled: !!applicationId,
+    });
+
   return {
     useEnrollmentApplications,
+    usePendingSectionAssignmentQueue,
     useApproveApplicationMutation,
     useRejectApplicationMutation,
     useApproveAndEnrollMutation,
     useSections,
+    useAvailableSectionsForEnrollment,
     useAcademicYears,
     useCurrentEmployeeId,
     useStudents,

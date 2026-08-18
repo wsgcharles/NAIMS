@@ -18,7 +18,16 @@ public class AcademicProgramsController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
+    {
+        var result = await _service.GetAllAsync();
+        return Ok(result);
+    }
+
+    [HttpGet("by-grade/{gradeLevelId}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetByGrade(int gradeLevelId)
     {
         var result = await _service.GetAllAsync();
         return Ok(result);

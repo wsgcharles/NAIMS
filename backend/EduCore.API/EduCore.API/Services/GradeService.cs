@@ -27,11 +27,16 @@ public class GradeService : IGradeService
             {
                 Id = g.Id,
                 EnrollmentId = g.EnrollmentId,
-                StudentName = g.Enrollment.Student.FirstName + " " + g.Enrollment.Student.LastName,
+                StudentName = g.Enrollment != null && g.Enrollment.Student != null
+                    ? $"{g.Enrollment.Student.FirstName} {g.Enrollment.Student.LastName}"
+                    : "Unknown Student",
                 SubjectId = g.SubjectId,
-                SubjectName = g.Subject.SubjectName,
+                SubjectName = g.Subject != null ? g.Subject.SubjectName : "Subject",
                 TeachingAssignmentId = g.TeachingAssignmentId,
-                TeacherName = g.TeachingAssignment.Employee.FirstName + " " + g.TeachingAssignment.Employee.LastName,
+                TeacherName = g.TeachingAssignment != null && g.TeachingAssignment.Employee != null
+                    ? $"{g.TeachingAssignment.Employee.FirstName} {g.TeachingAssignment.Employee.LastName}"
+                    : "No Teacher Assigned",
+
                 PrelimGrade = g.PrelimGrade,
                 MidtermGrade = g.MidtermGrade,
                 FinalGrade = g.FinalGrade,

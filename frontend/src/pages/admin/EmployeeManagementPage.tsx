@@ -114,7 +114,7 @@ export const EmployeeManagementPage: React.FC = () => {
           <button onClick={() => toast.success('Exporting Staff List (CSV)...')} className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50">
             <Download className="w-4 h-4 mr-2 text-emerald-500 inline" /> Export CSV
           </button>
-          <button onClick={() => setIsAddModalOpen(true)} className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-500">
+          <button onClick={() => setIsAddModalOpen(true)} className="px-4 py-2.5 text-xs font-bold text-white bg-purple-700 hover:bg-purple-600 rounded-xl shadow-lg shadow-purple-600/25 transition-all hover:scale-[1.01]">
             <Plus className="w-4 h-4 mr-2 inline" /> Add Staff Member
           </button>
         </div>
@@ -172,9 +172,9 @@ export const EmployeeManagementPage: React.FC = () => {
               !isError &&
               filtered.map((e) => (
                 <tr key={e.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
-                  <td className="px-6 py-4 font-mono text-xs font-bold text-blue-600 dark:text-blue-400">{e.employeeNumber}</td>
+                  <td className="px-6 py-4 font-mono text-xs font-bold text-purple-700 dark:text-purple-400">{e.employeeNumber}</td>
                   <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{e.fullName}</td>
-                  <td className="px-6 py-4 text-xs font-semibold text-purple-600 dark:text-purple-400">{e.position}</td>
+                  <td className="px-6 py-4 text-xs font-semibold text-purple-700 dark:text-purple-400">{e.position}</td>
                   <td className="px-6 py-4 text-xs text-slate-500">{e.department}</td>
                   <td className="px-6 py-4">
                     <span
@@ -188,7 +188,7 @@ export const EmployeeManagementPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right space-x-1">
-                    <button onClick={() => setEditLimitationFor(e.fullName)} title="Edit (limited)" aria-label={`Edit ${e.fullName}`} className="p-1.5 text-slate-400 hover:text-blue-500 rounded-md">
+                    <button onClick={() => setEditLimitationFor(e.fullName)} title="Edit (limited)" aria-label={`Edit ${e.fullName}`} className="p-1.5 text-slate-400 hover:text-purple-700 rounded-md">
                       <Info className="w-4 h-4" />
                     </button>
                     <button
@@ -341,7 +341,7 @@ export const EmployeeManagementPage: React.FC = () => {
                   <button
                     onClick={handleCreate}
                     disabled={!canSubmit || createMutation.isPending}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-purple-700 hover:bg-purple-600 rounded-lg disabled:opacity-50"
                   >
                     {createMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     Save Employee Record

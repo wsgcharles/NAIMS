@@ -158,3 +158,51 @@ public class StudentLedgerResponse
     public decimal CurrentBalance { get; set; }
     public List<LedgerTransactionDto> Transactions { get; set; } = new();
 }
+
+public class AccountingQueueItemDto
+{
+    public int ApplicationId { get; set; }
+    public string ApplicationNumber { get; set; } = string.Empty;
+    public string ApplicantName { get; set; } = string.Empty;
+    public string GradeApplyingFor { get; set; } = string.Empty;
+    public string SchoolYear { get; set; } = string.Empty;
+    public string VerificationSlipNumber { get; set; } = string.Empty;
+    public DateTime? DateVerified { get; set; }
+    public string AssignedRegistrar { get; set; } = "Registrar Office";
+    public string Status { get; set; } = string.Empty;
+    public string QueueStage { get; set; } = "ReadyForAssessment"; // ReadyForAssessment | AssessmentInProgress | Paid
+    public string FinancialClearanceStatus { get; set; } = "Pending";
+    public int? BillId { get; set; }
+    public decimal TotalBilled { get; set; }
+    public decimal TotalPaid { get; set; }
+    public decimal RemainingBalance { get; set; }
+}
+
+public class GenerateAssessmentRequest
+{
+    [Required]
+    public int ApplicationId { get; set; }
+
+    public decimal TuitionFee { get; set; }
+    public decimal MiscellaneousFee { get; set; }
+    public decimal LaboratoryFee { get; set; }
+    public decimal BooksFee { get; set; }
+    public decimal VoucherAmount { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public string? DiscountRemarks { get; set; }
+    public DateTime? DueDate { get; set; }
+}
+
+public class PaymentAdjustmentRequest
+{
+    [Required]
+    public int PaymentId { get; set; }
+
+    [Range(0, 1000000)]
+    public decimal NewAmount { get; set; }
+
+    [Required]
+    public string Reason { get; set; } = string.Empty;
+
+    public int? ApprovedByEmployeeId { get; set; }
+}

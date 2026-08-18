@@ -5,11 +5,11 @@ import { Compass, ArrowLeft } from 'lucide-react';
 export const NotFoundPage: React.FC = () => {
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center text-center p-6">
-      <div className="p-4 bg-blue-500/10 text-blue-500 rounded-full mb-4">
-        <Compass className="w-12 h-12" />
+      <div className="p-4 bg-purple-500/15 text-purple-600 dark:text-purple-400 rounded-full mb-4">
+        <Compass className="w-10 h-10 animate-spin-slow" />
       </div>
-      <span className="text-xs font-bold uppercase tracking-wider text-blue-500">
-        404 Page Not Found
+      <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400">
+        404 — Page Not Found
       </span>
       <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
         This Page Doesn't Exist

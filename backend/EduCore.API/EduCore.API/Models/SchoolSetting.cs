@@ -19,8 +19,12 @@ public class SchoolSetting
     [MaxLength(20)]
     public string OfficialReceiptPrefix { get; set; } = "OR-";
 
+    /// <summary>Configurable prefix for student numbers (e.g. "NAI").</summary>
     [MaxLength(20)]
-    public string StudentNumberPrefix { get; set; } = "STU-";
+    public string StudentNumberPrefix { get; set; } = "NAI";
+
+    /// <summary>Number of zero-padded digits in the running counter (e.g. 6 → 000001).</summary>
+    public int StudentNumberCounterLength { get; set; } = 6;
 
     [MaxLength(20)]
     public string BillNumberPrefix { get; set; } = "BILL-";

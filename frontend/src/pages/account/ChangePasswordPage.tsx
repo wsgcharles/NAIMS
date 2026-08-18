@@ -69,19 +69,19 @@ export const ChangePasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-lg">
+    <div className="space-y-6 max-w-lg pb-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Change Password</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <h1 className="text-2xl font-black text-purple-950 dark:text-white tracking-tight">Change Password</h1>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
           {user?.mustChangePassword
             ? 'For security, you must set a new password before continuing.'
-            : 'Update the password for your EduCore account.'}
+            : 'Update the password for your Noah\'s Academy account.'}
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs p-6 space-y-5"
+        className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl shadow-xs p-6 space-y-5"
       >
         <div className="space-y-1.5">
           <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -95,7 +95,7 @@ export const ChangePasswordPage: React.FC = () => {
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Your current password"
-              className="w-full pl-10 pr-11 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+              className="w-full pl-10 pr-11 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 transition-all hover:border-purple-300"
             />
             <button
               type="button"
@@ -120,7 +120,7 @@ export const ChangePasswordPage: React.FC = () => {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Create a strong password"
-              className="w-full pl-10 pr-11 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+              className="w-full pl-10 pr-11 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 transition-all hover:border-purple-300"
             />
             <button
               type="button"
@@ -143,10 +143,10 @@ export const ChangePasswordPage: React.FC = () => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Repeat your new password"
-            className={`w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border rounded-lg text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${
+            className={`w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border rounded-xl text-xs font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${
               mismatch
                 ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                : 'border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:ring-blue-500/20'
+                : 'border-slate-200 dark:border-slate-700 focus:border-purple-600 focus:ring-purple-600/20 hover:border-purple-300'
             }`}
           />
           {mismatch && <p className="text-[11px] text-rose-500 font-medium">Passwords do not match.</p>}
@@ -177,8 +177,8 @@ export const ChangePasswordPage: React.FC = () => {
 
         <button
           type="submit"
-          disabled={loading || !canSubmit}
-          className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-xs transition-all disabled:opacity-50 disabled:pointer-events-none text-sm"
+          disabled={!canSubmit || loading}
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-purple-700 hover:bg-purple-600 active:bg-purple-800 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-600/25 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none uppercase tracking-wider"
         >
           {loading ? (
             <>

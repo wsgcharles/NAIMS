@@ -1,25 +1,9 @@
-/**
- * AuthShell — Shared split-screen wrapper for all auth pages.
- *
- * Left Panel  : Branded illustration column (hidden on mobile)
- * Right Panel : Form content slot
- *
- * Usage:
- *   <AuthShell accent="blue" title="Student Portal" subtitle="...">
- *     <form ...>...</form>
- *   </AuthShell>
- */
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  GraduationCap,
-  ShieldCheck,
-  Zap,
-  Star,
-} from 'lucide-react';
+import { ShieldCheck, Zap, Star } from 'lucide-react';
+import { NoahLogo } from '../brand/NoahLogo';
 
-type Accent = 'blue' | 'purple' | 'emerald';
+type Accent = 'purple' | 'emerald';
 
 interface AuthShellProps {
   accent?: Accent;
@@ -29,177 +13,96 @@ interface AuthShellProps {
   children: React.ReactNode;
 }
 
-const accentConfig: Record<
-  Accent,
-  {
-    glow: string;
-    border: string;
-    iconBg: string;
-    badge: string;
-    badgeText: string;
-    panelFrom: string;
-    panelTo: string;
-  }
-> = {
-  blue: {
-    glow: 'bg-blue-600/20',
-    border: 'focus:border-blue-500 focus:ring-blue-500/20',
-    iconBg: 'bg-blue-600 shadow-blue-500/30',
-    badge: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
-    badgeText: 'EduCore Platform',
-    panelFrom: 'from-blue-950',
-    panelTo: 'to-slate-950',
-  },
-  purple: {
-    glow: 'bg-purple-600/20',
-    border: 'focus:border-purple-500 focus:ring-purple-500/20',
-    iconBg: 'bg-purple-600 shadow-purple-500/30',
-    badge: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
-    badgeText: 'Guardian Portal',
-    panelFrom: 'from-purple-950',
-    panelTo: 'to-slate-950',
-  },
-  emerald: {
-    glow: 'bg-emerald-600/15',
-    border: 'focus:border-emerald-500 focus:ring-emerald-500/20',
-    iconBg: 'bg-emerald-700 shadow-emerald-600/30',
-    badge: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
-    badgeText: 'Employee SSO',
-    panelFrom: 'from-emerald-950',
-    panelTo: 'to-slate-950',
-  },
-};
-
 const highlights = [
-  { icon: ShieldCheck, label: 'Secure institutional authentication' },
-  { icon: Zap, label: 'Real-time academic data access' },
-  { icon: Star, label: 'Trusted by 2,480+ students & faculty' },
+  { icon: ShieldCheck, label: 'Official Noah\'s Academy SSO Authentication' },
+  { icon: Zap, label: 'Real-time gradebooks, ledgers & attendance' },
+  { icon: Star, label: 'K-12 Educational Management System' },
 ];
 
 export const AuthShell: React.FC<AuthShellProps> = ({
-  accent = 'blue',
   title,
   subtitle,
-  icon: IconProp,
   children,
 }) => {
-  const c = accentConfig[accent];
-  const Icon = IconProp ?? GraduationCap;
-
   return (
-    <div className="min-h-screen bg-slate-950 flex relative overflow-hidden">
-      {/* ── Ambient glows (full canvas) ─────────────────── */}
-      <div
-        className={`pointer-events-none absolute -top-40 -left-40 w-[600px] h-[600px] ${c.glow} rounded-full blur-3xl opacity-60`}
-      />
-      <div className="pointer-events-none absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-3xl opacity-50" />
-
+    <div className="min-h-screen bg-[#FAF8FF] text-slate-900 flex relative overflow-hidden font-sans">
       {/* ════════════════════════════════════════════════
-          LEFT BRAND PANEL (hidden < lg)
+          LEFT BRAND PANEL — Noah's Academy Identity
       ════════════════════════════════════════════════ */}
-      <div
-        className={`hidden lg:flex lg:w-[45%] xl:w-[40%] shrink-0 flex-col justify-between p-12 bg-gradient-to-br ${c.panelFrom} ${c.panelTo} border-r border-slate-800/60 relative`}
-      >
-        {/* Decorative grid */}
-        <div className="absolute inset-0 [background-image:linear-gradient(rgba(148,163,184,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.04)_1px,transparent_1px)] [background-size:64px_64px] pointer-events-none" />
-        {/* Inner glow */}
-        <div
-          className={`absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 ${c.glow} rounded-full blur-3xl pointer-events-none`}
-        />
-
+      <div className="hidden lg:flex lg:w-[45%] xl:w-[40%] shrink-0 flex-col justify-between p-12 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 text-white relative shadow-2xl">
+        {/* Top Logo Header */}
         <div className="relative z-10">
-          <Link to="/" className="inline-flex items-center gap-3 group">
-            <div className="p-2.5 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform">
-              <GraduationCap className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="font-extrabold text-lg text-white tracking-tight group-hover:text-blue-300 transition-colors">
-                Noah's Academy
-              </p>
-              <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">
-                EduCore Platform
-              </p>
-            </div>
+          <Link to="/" className="inline-flex items-center gap-3">
+            <NoahLogo size="lg" showText={true} lightText={true} />
           </Link>
         </div>
 
-        <div className="relative z-10 space-y-8 max-w-xs">
+        {/* Center Content & Motto */}
+        <div className="relative z-10 space-y-8 my-auto max-w-sm">
           <div className="space-y-3">
-            <span
-              className={`inline-block px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-widest ${c.badge}`}
-            >
-              {c.badgeText}
+            <span className="inline-block px-3.5 py-1 rounded-full bg-amber-400 text-purple-950 text-[10px] font-black uppercase tracking-wider shadow-sm">
+              Arca South Campus · Taguig City
             </span>
-            <h2 className="text-3xl font-extrabold text-white tracking-tight leading-tight">
-              {title}
+            <h2 className="text-3xl font-black text-white tracking-tight leading-tight">
+              "Excellence in Education, <br />
+              <span className="text-amber-300">Virtue in Character."</span>
             </h2>
-            <p className="text-sm text-slate-400 leading-relaxed">{subtitle}</p>
+            <p className="text-xs text-purple-200 leading-relaxed font-medium">
+              Welcome to NAISIS — Noah's Academy Student Information System. Secure portal for students, guardians, faculty, and administrators.
+            </p>
           </div>
 
-          <ul className="space-y-4">
-            {highlights.map((h) => {
+          <ul className="space-y-3 pt-2">
+            {highlights.map((h, i) => {
               const HIcon = h.icon;
               return (
-                <li key={h.label} className="flex items-center gap-3">
-                  <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${c.badge} border`}
-                  >
+                <li key={i} className="flex items-center space-x-3 text-xs text-purple-100">
+                  <div className="p-1.5 rounded-lg bg-amber-400/20 text-amber-300 shrink-0">
                     <HIcon className="w-4 h-4" />
                   </div>
-                  <span className="text-xs text-slate-300 font-medium">{h.label}</span>
+                  <span className="font-semibold">{h.label}</span>
                 </li>
               );
             })}
           </ul>
         </div>
 
-        <div className="relative z-10 text-[11px] text-slate-600">
-          © {new Date().getFullYear()} Noah's Academy · Powered by EduCore
+        {/* Footer info */}
+        <div className="relative z-10 text-[11px] text-purple-300 font-semibold border-t border-purple-800/80 pt-4 flex items-center justify-between">
+          <span>© {new Date().getFullYear()} Noah's Academy Inc.</span>
+          <span>NAISIS v2.4</span>
         </div>
       </div>
 
       {/* ════════════════════════════════════════════════
-          RIGHT FORM PANEL
+          RIGHT FORM PANEL (Clean White Form Card)
       ════════════════════════════════════════════════ */}
-      <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-16 relative z-10">
-        {/* Mobile brand header (visible < lg) */}
-        <div className="lg:hidden mb-10 flex items-center gap-3">
-          <div className="p-2.5 bg-blue-600 rounded-xl text-white shadow-lg shadow-blue-500/25">
-            <GraduationCap className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="font-extrabold text-base text-white">Noah's Academy</p>
-            <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">
-              EduCore Platform
-            </p>
-          </div>
+      <div className="flex-1 flex flex-col justify-between p-6 sm:p-12 lg:p-16 overflow-y-auto">
+        {/* Mobile Header Logo */}
+        <div className="lg:hidden flex justify-center mb-6">
+          <Link to="/">
+            <NoahLogo size="md" showText={true} lightText={false} />
+          </Link>
         </div>
 
-        {/* Form card */}
-        <div className="w-full max-w-md mx-auto">
-          {/* Icon + portal name */}
-          <div className="flex flex-col items-center gap-3 mb-8 text-center">
-            <div className={`p-3.5 rounded-2xl text-white shadow-xl ${c.iconBg}`}>
-              <Icon className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-extrabold text-white tracking-tight">{title}</h1>
-              <p className="text-xs text-slate-400 mt-1">{subtitle}</p>
-            </div>
+        <div className="max-w-md w-full mx-auto my-auto space-y-8 bg-white border border-purple-100 rounded-3xl p-8 sm:p-10 shadow-xl">
+          <div className="space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-black text-purple-950 tracking-tight">
+              {title}
+            </h1>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+              {subtitle}
+            </p>
           </div>
 
-          {/* Form slot */}
           {children}
         </div>
 
-        {/* Bottom back-link */}
-        <div className="mt-8 text-center">
-          <Link
-            to="/"
-            className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
-          >
-            ← Return to Noah's Academy website
-          </Link>
+        <div className="text-center text-[11px] text-slate-500 font-semibold pt-6">
+          <span>Need portal assistance? Contact </span>
+          <a href="mailto:support@noahsacademy.edu.ph" className="text-purple-700 hover:underline">
+            support@noahsacademy.edu.ph
+          </a>
         </div>
       </div>
     </div>

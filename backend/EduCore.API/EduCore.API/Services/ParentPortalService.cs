@@ -53,12 +53,12 @@ public class ParentPortalService : IParentPortalService
                 FullName = $"{s.FirstName} {(string.IsNullOrWhiteSpace(s.MiddleName) ? "" : s.MiddleName + " ")}{s.LastName} {s.Suffix}".Trim(),
                 Status = s.Status.ToString(),
                 CurrentGradeLevel = _context.Enrollments
-                    .Where(e => e.StudentId == s.Id && e.Section.ProgramOffering.AcademicYear.Status == Enums.AcademicYearStatus.Current)
-                    .Select(e => e.Section.ProgramOffering.GradeLevel.Name)
+                    .Where(e => e.StudentId == s.Id && e.SectionId != null && e.Section!.ProgramOffering!.AcademicYear!.Status == Enums.AcademicYearStatus.Current)
+                    .Select(e => e.Section!.ProgramOffering!.GradeLevel!.Name)
                     .FirstOrDefault() ?? "Not Enrolled",
                 CurrentSection = _context.StudentSectionAssignments
                     .Where(ssa => ssa.StudentId == s.Id && ssa.Section.ProgramOffering.AcademicYear.Status == Enums.AcademicYearStatus.Current)
-                    .Select(ssa => ssa.Section.SectionName)
+                    .Select(ssa => ssa.Section!.SectionName)
                     .FirstOrDefault() ?? "Unassigned"
             })
             .ToListAsync();
@@ -73,9 +73,9 @@ public class ParentPortalService : IParentPortalService
 
         var currentEnrollment = await _context.Enrollments
             .Include(e => e.Section)
-                .ThenInclude(s => s.ProgramOffering)
-                    .ThenInclude(po => po.GradeLevel)
-            .Where(e => e.StudentId == student.Id && e.Section.ProgramOffering.AcademicYear.Status == Enums.AcademicYearStatus.Current)
+                .ThenInclude(s => s!.ProgramOffering)
+                    .ThenInclude(po => po!.GradeLevel)
+            .Where(e => e.StudentId == student.Id && e.SectionId != null && e.Section!.ProgramOffering!.AcademicYear!.Status == Enums.AcademicYearStatus.Current)
             .FirstOrDefaultAsync();
 
         var currentSection = await _context.StudentSectionAssignments
@@ -104,7 +104,7 @@ public class ParentPortalService : IParentPortalService
 
         return await _context.StudentSectionAssignments
             .Where(ssa => ssa.StudentId == studentId && ssa.Section.ProgramOffering.AcademicYearId == academicYearId)
-            .SelectMany(ssa => ssa.Section.TeachingAssignments)
+            .SelectMany(ssa => ssa.Section.TeachingAssignments.Where(ta => ta.IsActive))
             .Select(ta => new ChildSubjectResponse
             {
                 TeachingAssignmentId = ta.Id,
@@ -122,7 +122,10 @@ public class ParentPortalService : IParentPortalService
         if (!isChild) return new List<ChildGradeResponse>();
 
         return await _context.Grades
-            .Where(g => g.Enrollment.StudentId == studentId && g.Enrollment.Section.ProgramOffering.AcademicYearId == academicYearId)
+            .Where(g => g.Enrollment!.StudentId == studentId &&
+                        g.Enrollment!.SectionId != null &&
+                        g.Enrollment!.Section!.ProgramOffering!.AcademicYearId == academicYearId &&
+                        g.Status == EduCore.API.Enums.GradeStatus.Released)
             .Select(g => new ChildGradeResponse
             {
                 SubjectCode = g.TeachingAssignment.Subject.SubjectCode,
@@ -144,13 +147,13 @@ public class ParentPortalService : IParentPortalService
 
         return await _context.Enrollments
             .Where(e => e.StudentId == studentId)
-            .OrderByDescending(e => e.Section.ProgramOffering.AcademicYear.StartDate)
+            .OrderByDescending(e => e.Section != null && e.Section.ProgramOffering != null && e.Section.ProgramOffering.AcademicYear != null ? e.Section.ProgramOffering.AcademicYear.StartDate : DateTime.MinValue)
             .Select(e => new EnrollmentResponse
             {
                 Id = e.Id,
                 ApplicationNumber = e.EnrollmentNumber, 
                 FullName = string.Empty,
-                GradeApplyingFor = e.Section.ProgramOffering.GradeLevel.Name,
+                GradeApplyingFor = (e.Section != null && e.Section.ProgramOffering != null && e.Section.ProgramOffering.GradeLevel != null) ? e.Section.ProgramOffering.GradeLevel.Name : "N/A",
                 PreviousSchool = string.Empty,
                 Email = string.Empty,
                 Status = e.Status.ToString(),
@@ -158,5 +161,6 @@ public class ParentPortalService : IParentPortalService
                 CreatedAt = e.EnrollmentDate
             })
             .ToListAsync();
+
     }
 }

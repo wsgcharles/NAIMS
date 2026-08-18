@@ -10,7 +10,6 @@ import {
   Search,
   X,
   Loader2,
-  Tag,
   Pencil,
   Trash2,
   Receipt,
@@ -186,29 +185,63 @@ export const FinanceManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Accounting & Student Financial Ledger</h1>
-          <p className="text-sm text-slate-500 mt-1">Tuition billing, payment collection recording, and official electronic receipts.</p>
+          <h1 className="text-2xl font-black text-purple-950 dark:text-white tracking-tight">
+            Accounting ERP & Student Financial Ledger
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Tuition billing, payment collection, school fees, and official electronic receipts.
+          </p>
         </div>
 
         {!isAccountantBlocked && (
           <div className="flex items-center space-x-3">
             <button
               onClick={() => toast.info('A financial reporting/export endpoint is not yet available from the backend. This module reflects live data on-screen only.')}
-              className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
+              className="px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-purple-50 transition-colors shadow-xs"
             >
-              <Download className="w-4 h-4 mr-2 text-emerald-500 inline" /> Export Ledger CSV
+              <Download className="w-4 h-4 mr-2 text-emerald-600 inline" />
+              Export Summary
             </button>
             <button
               onClick={() => setIsFeesModalOpen(true)}
-              className="inline-flex items-center px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-500 shadow-md shadow-blue-500/20"
+              className="px-4 py-2.5 text-xs font-bold text-white bg-purple-700 hover:bg-purple-600 rounded-xl shadow-lg shadow-purple-600/25 transition-all hover:scale-[1.01]"
             >
-              <Tag className="w-4 h-4 mr-2" /> Manage Fee Categories
+              <Plus className="w-4 h-4 mr-2 inline" />
+              Manage Fee Categories
             </button>
           </div>
         )}
+      </div>
+
+      {/* Metrics Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <StatCard
+          title="Today's Collection"
+          value={dashboard.isLoading ? '…' : currency(dashboard.data?.todayCollection ?? 0)}
+          icon={DollarSign}
+          iconBgColor="bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300"
+        />
+        <StatCard
+          title="Monthly Collection"
+          value={dashboard.isLoading ? '…' : currency(dashboard.data?.monthlyCollection ?? 0)}
+          icon={Wallet}
+          iconBgColor="bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300"
+        />
+        <StatCard
+          title="Outstanding Balances"
+          value={dashboard.isLoading ? '…' : currency(dashboard.data?.totalOutstandingBalances ?? 0)}
+          icon={FileText}
+          iconBgColor="bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300"
+        />
+        <StatCard
+          title="Unpaid Accounts"
+          value={dashboard.isLoading ? '…' : `${dashboard.data?.unpaidStudentsCount ?? 0}`}
+          icon={CreditCard}
+          iconBgColor="bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300"
+        />
       </div>
 
       {isAccountantBlocked && (
@@ -292,7 +325,7 @@ export const FinanceManagementPage: React.FC = () => {
                   !dashboard.isError &&
                   (dashboard.data?.recentPayments ?? []).map((p) => (
                     <tr key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
-                      <td className="px-6 py-4 font-mono text-xs font-bold text-blue-600 dark:text-blue-400">{p.paymentNumber}</td>
+                      <td className="px-6 py-4 font-mono text-xs font-bold text-purple-700 dark:text-purple-400">{p.paymentNumber}</td>
                       <td className="px-6 py-4 font-mono text-xs text-slate-500">{p.billNumber}</td>
                       <td className="px-6 py-4 text-xs font-mono font-bold text-slate-900 dark:text-white">{currency(p.amount)}</td>
                       <td className="px-6 py-4 text-xs text-slate-500">{p.paymentMethod}</td>
@@ -407,7 +440,7 @@ export const FinanceManagementPage: React.FC = () => {
                           !bills.isError &&
                           (bills.data ?? []).map((b) => (
                             <tr key={b.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
-                              <td className="px-6 py-3 font-mono text-xs font-bold text-blue-600 dark:text-blue-400">{b.billNumber}</td>
+                              <td className="px-6 py-3 font-mono text-xs font-bold text-purple-700 dark:text-purple-400">{b.billNumber}</td>
                               <td className="px-6 py-3 text-xs font-mono text-slate-900 dark:text-white">{currency(b.totalAmount)}</td>
                               <td className="px-6 py-3 text-xs font-mono text-emerald-600 dark:text-emerald-400">{currency(b.amountPaid)}</td>
                               <td className="px-6 py-3 text-xs font-mono font-bold text-slate-900 dark:text-white">{currency(b.balance)}</td>
@@ -417,7 +450,7 @@ export const FinanceManagementPage: React.FC = () => {
                                 {b.balance > 0 ? (
                                   <button
                                     onClick={() => openPaymentModal(b)}
-                                    className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-xs font-semibold rounded-lg text-white"
+                                    className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-xs font-semibold rounded-lg text-white"
                                   >
                                     Record Payment
                                   </button>
@@ -576,7 +609,7 @@ export const FinanceManagementPage: React.FC = () => {
                             </span>
                           </td>
                           <td className="px-4 py-2.5 text-right space-x-1">
-                            <button onClick={() => openEditFee(f.id)} title="Edit" aria-label={`Edit ${f.feeName}`} className="p-1.5 text-slate-400 hover:text-blue-500 rounded-md inline-block">
+                            <button onClick={() => openEditFee(f.id)} title="Edit" aria-label={`Edit ${f.feeName}`} className="p-1.5 text-slate-400 hover:text-purple-700 rounded-md inline-block">
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
                             <button onClick={() => setConfirmDeleteFeeId(f.id)} title="Delete" aria-label={`Delete ${f.feeName}`} className="p-1.5 text-slate-400 hover:text-rose-500 rounded-md inline-block">
@@ -686,7 +719,7 @@ export const FinanceManagementPage: React.FC = () => {
                   <button
                     onClick={handleSaveFee}
                     disabled={createFeeMutation.isPending || updateFeeMutation.isPending}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-md disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-600 rounded-lg shadow-md disabled:opacity-50"
                   >
                     {(createFeeMutation.isPending || updateFeeMutation.isPending) && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     <Plus className="w-3.5 h-3.5" />
@@ -792,7 +825,7 @@ export const FinanceManagementPage: React.FC = () => {
               <button
                 onClick={handleRecordPayment}
                 disabled={processPaymentMutation.isPending}
-                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-md disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-600 rounded-lg shadow-md disabled:opacity-50"
               >
                 {processPaymentMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Record Payment

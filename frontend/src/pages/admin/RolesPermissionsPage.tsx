@@ -91,7 +91,7 @@ export const RolesPermissionsPage: React.FC = () => {
               ROLES.map((role) => (
                 <tr key={role} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
                   <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{role}</td>
-                  <td className="px-6 py-4 font-mono text-xs text-blue-600 dark:text-blue-400">{countsByRole.get(role) ?? 0} Assigned</td>
+                  <td className="px-6 py-4 font-mono text-xs font-bold text-purple-700 dark:text-purple-400">{countsByRole.get(role) ?? 0} Assigned</td>
                   <td className="px-6 py-4 text-xs text-slate-500">{ROLE_ACCESS_SUMMARY[role]}</td>
                   <td className="px-6 py-4 text-right">
                     <button

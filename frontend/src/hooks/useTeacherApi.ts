@@ -72,10 +72,28 @@ export const useTeacherApi = () => {
       },
     });
 
+  const useSubmitGradesForApprovalMutation = (teachingAssignmentId: number | null) =>
+    useMutation({
+      mutationFn: async () => {
+        await apiClient.post(`/TeacherDashboard/MyClasses/${teachingAssignmentId}/SubmitForApproval`);
+      },
+      onSuccess: () => {
+        toast.success('Grades submitted for approval to Academic Head / Vice Principal.');
+        if (teachingAssignmentId != null) {
+          queryClient.invalidateQueries({ queryKey: queryKeys.teacherPortal.grades(teachingAssignmentId) });
+        }
+      },
+      onError: (err: any) => {
+        const message = err?.response?.data?.message || err?.response?.data || 'Unable to submit grades for approval.';
+        toast.error(typeof message === 'string' ? message : 'Unable to submit grades for approval.');
+      },
+    });
+
   return {
     useTeacherClasses,
     useTeacherGrades,
     useUpdateGradeMutation,
+    useSubmitGradesForApprovalMutation,
     useReleaseGradesMutation,
   };
 };

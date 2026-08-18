@@ -23,7 +23,7 @@ export const ForbiddenPage: React.FC = () => {
         className="mt-6 inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs transition-all shadow-md"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
-        Return to Safe Dashboard
+        Return to NAISIS Portal
       </Link>
     </div>
   );

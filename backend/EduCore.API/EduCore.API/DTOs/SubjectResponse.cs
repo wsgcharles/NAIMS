@@ -12,7 +12,21 @@ public class SubjectResponse
 
     public string GradeLevel { get; set; } = string.Empty;
 
+    public int? ProgramId { get; set; }
+
+    public string? ProgramCode { get; set; }
+
+    public string? ProgramName { get; set; }
+
     public bool IsCoreSubject { get; set; }
+
+    public string CurriculumVersion { get; set; } = "MATATAG-K10";
+
+    public string SubjectType { get; set; } = "Core";
+
+    public int? Semester { get; set; }
+
+    public string? DomainCategory { get; set; }
 
     public int Units { get; set; }
 

@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 import { useParentApi } from '../../hooks/useParentApi';
 
 const formatCurrency = (amount: number | undefined | null): string =>
-  `$${(amount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  `₱${(amount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const formatGrade = (value: number | null | undefined): string =>
   value === null || value === undefined ? '—' : value.toFixed(1);
@@ -49,17 +49,6 @@ const InlineEmpty: React.FC<{ message: string }> = ({ message }) => (
     {message}
   </div>
 );
-
-// Static mock data — attendance, messaging, and bulletin systems have no backing
-// API in EduCore.API yet (no Attendance/Message/Announcement entities exist).
-const attendanceLogs = [
-  { date: 'July 24, 2026', timeIn: '07:48 AM', timeOut: '04:05 PM', status: 'Present', gate: 'Main Entrance Gate A' },
-  { date: 'July 23, 2026', timeIn: '07:51 AM', timeOut: '04:02 PM', status: 'Present', gate: 'Main Entrance Gate A' },
-  { date: 'July 22, 2026', timeIn: '07:44 AM', timeOut: '04:10 PM', status: 'Present', gate: 'Main Entrance Gate A' },
-  { date: 'July 18, 2026', timeIn: '—', timeOut: '—', status: 'Excused Absence', gate: 'Medical Notice Filed' },
-];
-const attendanceRate = '98.5%';
-const absencesLogged = 1;
 
 const announcements = [
   { title: 'Parent-Teacher Orientation Conference', date: 'August 05, 2026', author: 'School Administration', desc: 'Mandatory online and physical orientation for all Grade 7 and Grade 11 guardians.' },
@@ -92,8 +81,15 @@ const PATH_TO_TAB: Record<string, ParentTab> = Object.fromEntries(
 ) as Record<string, ParentTab>;
 
 export const ParentDashboard: React.FC = () => {
-  const { useChildren, useChildDetails, useCurrentAcademicYear, useChildGrades, useChildLedger } =
-    useParentApi();
+  const {
+    useChildren,
+    useChildDetails,
+    useCurrentAcademicYear,
+    useChildGrades,
+    useChildLedger,
+    useChildAttendance,
+    useChildAttendanceSummary,
+  } = useParentApi();
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -110,6 +106,8 @@ export const ParentDashboard: React.FC = () => {
     academicYear?.id ?? null
   );
   const { data: ledger, isLoading: ledgerLoading, isError: ledgerError } = useChildLedger(selectedChildId);
+  const { data: attendanceData, isLoading: attendanceLoading } = useChildAttendance(selectedChildId);
+  const { data: attendanceSummary } = useChildAttendanceSummary(selectedChildId);
 
   useEffect(() => {
     if (!selectedChildId && children && children.length > 0) {
@@ -241,8 +239,8 @@ export const ParentDashboard: React.FC = () => {
                   onClick={() => goToTab(tab.id as ParentTab)}
                   className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
                     isActive
-                      ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20'
-                      : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700'
+                      ? 'bg-purple-700 text-white shadow-md shadow-purple-600/25'
+                      : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white border border-slate-200 dark:border-slate-800 hover:bg-purple-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -265,8 +263,8 @@ export const ParentDashboard: React.FC = () => {
                 />
                 <StatCard
                   title="Attendance Rate"
-                  value={attendanceRate}
-                  description={`${absencesLogged} Absence Logged`}
+                  value={`${attendanceSummary?.attendanceRate ?? 100}%`}
+                  description={`${attendanceSummary?.absentDays ?? 0} Absences Logged`}
                   icon={Clock}
                   iconBgColor="bg-emerald-500/10 text-emerald-500"
                 />
@@ -438,41 +436,55 @@ export const ParentDashboard: React.FC = () => {
           {activeTab === 'attendance' && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                <StatCard title="Ward Attendance Rate" value={attendanceRate} icon={Clock} iconBgColor="bg-emerald-500/10 text-emerald-500" />
-                <StatCard title="Absences Logged" value={`${absencesLogged} Day`} icon={CheckCircle} iconBgColor="bg-blue-500/10 text-blue-500" />
-                <StatCard title="Gate SMS Alerts" value="Enabled" icon={Bell} iconBgColor="bg-purple-500/10 text-purple-500" />
+                <StatCard title="Ward Attendance Rate" value={`${attendanceSummary?.attendanceRate ?? 100}%`} icon={Clock} iconBgColor="bg-emerald-500/10 text-emerald-500" />
+                <StatCard title="Absences Logged" value={`${attendanceSummary?.absentDays ?? 0} Days`} icon={CheckCircle} iconBgColor="bg-blue-500/10 text-blue-500" />
+                <StatCard title="Total Days Tracked" value={`${attendanceSummary?.totalDaysRecorded ?? 0} Days`} icon={Bell} iconBgColor="bg-purple-500/10 text-purple-500" />
               </div>
 
               <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-4">
-                <h3 className="text-lg font-bold text-white border-b border-slate-800 pb-3">Automated Campus Check-in Terminal Logs</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] font-semibold border-b border-slate-800">
-                      <tr>
-                        <th className="px-4 py-3">Date</th>
-                        <th className="px-4 py-3">Check-In</th>
-                        <th className="px-4 py-3">Check-Out</th>
-                        <th className="px-4 py-3">Terminal</th>
-                        <th className="px-4 py-3 text-center">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/60">
-                      {attendanceLogs.map((log, idx) => (
-                        <tr key={idx} className="hover:bg-slate-800/40">
-                          <td className="px-4 py-3 font-semibold text-white">{log.date}</td>
-                          <td className="px-4 py-3 text-emerald-400 font-mono">{log.timeIn}</td>
-                          <td className="px-4 py-3 text-purple-400 font-mono">{log.timeOut}</td>
-                          <td className="px-4 py-3 text-slate-400">{log.gate}</td>
-                          <td className="px-4 py-3 text-center">
-                            <span className="px-2.5 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">
-                              {log.status}
-                            </span>
-                          </td>
+                <h3 className="text-lg font-bold text-white border-b border-slate-800 pb-3">Official Attendance Log — {childDetails?.fullName ?? 'Ward'}</h3>
+                {attendanceLoading ? (
+                  <InlineEmpty message="Loading attendance records from database…" />
+                ) : !attendanceData || attendanceData.length === 0 ? (
+                  <InlineEmpty message="No attendance logs recorded yet for this student." />
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] font-semibold border-b border-slate-800">
+                        <tr>
+                          <th className="px-4 py-3">Date</th>
+                          <th className="px-4 py-3">Subject / Course</th>
+                          <th className="px-4 py-3">Recorded By</th>
+                          <th className="px-4 py-3">Remarks</th>
+                          <th className="px-4 py-3 text-center">Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60">
+                        {attendanceData.map((log: any) => (
+                          <tr key={log.id} className="hover:bg-slate-800/40">
+                            <td className="px-4 py-3 font-semibold text-white">
+                              {new Date(log.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                            </td>
+                            <td className="px-4 py-3 text-purple-400 font-medium">{log.subjectName || 'Core Class'}</td>
+                            <td className="px-4 py-3 text-slate-300">{log.recordedByName || 'Faculty'}</td>
+                            <td className="px-4 py-3 text-slate-400">{log.remarks || '—'}</td>
+                            <td className="px-4 py-3 text-center">
+                              <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${
+                                log.status === 'Present'
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                  : log.status === 'Tardy'
+                                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                  : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                              }`}>
+                                {log.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -1,4 +1,4 @@
-﻿namespace EduCore.API.DTOs;
+namespace EduCore.API.DTOs;
 
 public class EnrollmentResponse
 {
@@ -10,7 +10,12 @@ public class EnrollmentResponse
 
     public string GradeApplyingFor { get; set; } = string.Empty;
 
+    public string? Track { get; set; }
+
+    public string? Strand { get; set; }
+
     public string PreviousSchool { get; set; } = string.Empty;
+
 
     public string Email { get; set; } = string.Empty;
 

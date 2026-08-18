@@ -11,6 +11,7 @@ public class SchoolSettingResponse
     public string? CurrentAcademicYearName { get; set; }
     public string OfficialReceiptPrefix { get; set; } = string.Empty;
     public string StudentNumberPrefix { get; set; } = string.Empty;
+    public int StudentNumberCounterLength { get; set; } = 6;
     public string BillNumberPrefix { get; set; } = string.Empty;
     public string PaymentNumberPrefix { get; set; } = string.Empty;
     public string Currency { get; set; } = string.Empty;
@@ -34,7 +35,9 @@ public class UpdateSchoolSettingRequest
     public string OfficialReceiptPrefix { get; set; } = "OR-";
 
     [MaxLength(20)]
-    public string StudentNumberPrefix { get; set; } = "STU-";
+    public string StudentNumberPrefix { get; set; } = "NAI";
+
+    public int StudentNumberCounterLength { get; set; } = 6;
 
     [MaxLength(20)]
     public string BillNumberPrefix { get; set; } = "BILL-";

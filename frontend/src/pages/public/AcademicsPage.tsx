@@ -1,247 +1,172 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, ArrowRight, GraduationCap, FlaskConical, Calculator, Globe, Music } from 'lucide-react';
+import { CheckCircle, ArrowRight, BookOpen, Compass, Briefcase, Laptop, Utensils } from 'lucide-react';
 
 interface Program {
   id: string;
   tag: string;
-  tagColor: string;
   title: string;
   subtitle: string;
   units: string;
   features: string[];
   icon: React.ElementType;
-  accent: string;
 }
 
 const programs: Program[] = [
   {
-    id: 'stem',
-    tag: 'College Prep',
-    tagColor: 'bg-blue-950 border-blue-800 text-blue-400',
-    title: 'Senior High — STEM Track',
-    subtitle: 'Science, Technology, Engineering & Mathematics',
-    units: '36 Units / Year',
-    icon: FlaskConical,
-    accent: 'blue',
+    id: 'assh',
+    tag: 'Senior High Track',
+    title: 'Arts, Social Sciences and Humanities (ASSH)',
+    subtitle: 'Humanities, Creative Writing & Social Inquiry',
+    units: 'DepEd Aligned Track',
+    icon: Compass,
     features: [
-      'Advanced Physics & Chemistry Labs',
-      'Computer Programming (Python / Web Dev)',
-      'Calculus & Analytic Geometry',
-      'Research Methodology & Innovation',
+      'Creative Writing & Literature Analysis',
+      'Philippine Governance & Social Sciences',
+      'Community Action & Public Speaking',
+      'Research Methodology & Capstone Project',
     ],
   },
   {
-    id: 'abm',
-    tag: 'College Prep',
-    tagColor: 'bg-emerald-950 border-emerald-800 text-emerald-400',
-    title: 'Senior High — ABM Track',
-    subtitle: 'Accountancy, Business & Management',
-    units: '34 Units / Year',
-    icon: Calculator,
-    accent: 'emerald',
+    id: 'be',
+    tag: 'Senior High Track',
+    title: 'Business Entrepreneurship (BE)',
+    subtitle: 'Enterprise Creation, Marketing & Finance',
+    units: 'DepEd Aligned Track',
+    icon: Briefcase,
     features: [
-      'Fundamentals of Accounting',
-      'Business Mathematics & Finance',
-      'Principles of Marketing',
-      'Entrepreneurship & Business Planning',
+      'Business Mathematics & Enterprise Planning',
+      'Fundamentals of Accounting & Bookkeeping',
+      'Marketing Principles & Customer Relations',
+      'Real-world Entrepreneurial Simulation',
     ],
   },
   {
-    id: 'jhs',
-    tag: 'Secondary Phase',
-    tagColor: 'bg-amber-950 border-amber-800 text-amber-400',
-    title: 'Junior High School Program',
-    subtitle: 'Grades 7 through 10',
-    units: 'Core Competency Track',
-    icon: Globe,
-    accent: 'amber',
+    id: 'ict-support',
+    tag: 'Senior High Track',
+    title: 'ICT Support',
+    subtitle: 'Information & Communications Technology Support',
+    units: 'Technical & Practical Track',
+    icon: Laptop,
     features: [
-      'Integrated Sciences & Robotics',
-      'World History & Social Studies',
-      'Literary Arts & Speech',
-      'Physical Education & Wellness',
+      'Computer Systems Servicing & Networking',
+      'Technical Support & System Administration',
+      'Software & Digital Applications Integration',
+      'IT Helpdesk & Troubleshooting Skills',
     ],
   },
   {
-    id: 'elem',
-    tag: 'Foundational',
-    tagColor: 'bg-purple-950 border-purple-800 text-purple-400',
-    title: 'Elementary Education',
-    subtitle: 'Grades 1 through 6',
-    units: 'Foundational Track',
-    icon: Music,
-    accent: 'purple',
+    id: 'hospitality',
+    tag: 'Senior High Track',
+    title: 'Hospitality and Tourism',
+    subtitle: 'Service Management & Tourism Operations',
+    units: 'Technical & Practical Track',
+    icon: Utensils,
     features: [
-      'Foundational Mathematics',
-      'Environmental Science',
-      'Values Education & Creative Arts',
-      'Mother Tongue & Filipino Language',
+      'Front Office & Customer Care Operations',
+      'Tourism Principles & Event Management',
+      'Food & Beverage Service Procedures',
+      'Hospitality Workplace Safety & Hygiene',
+    ],
+  },
+  {
+    id: 'grade12-spec',
+    tag: 'Grade 12 Specializations',
+    title: 'Grade 12 Specialized Strands',
+    subtitle: 'ABM · HUMSS 201 · GAS · AD · HE · ICT',
+    units: 'College & Career Preparatory',
+    icon: BookOpen,
+    features: [
+      'ABM (Accountancy, Business & Management)',
+      'HUMSS 201 (Humanities & Social Sciences)',
+      'GAS (General Academic Strand)',
+      'AD (Arts & Design), HE (Home Economics) & ICT',
     ],
   },
 ];
 
-const accentMap: Record<string, { border: string; bg: string; text: string; badge: string }> = {
-  blue: {
-    border: 'border-blue-500/50',
-    bg: 'bg-blue-500/10',
-    text: 'text-blue-400',
-    badge: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  },
-  emerald: {
-    border: 'border-emerald-500/50',
-    bg: 'bg-emerald-500/10',
-    text: 'text-emerald-400',
-    badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  },
-  amber: {
-    border: 'border-amber-500/50',
-    bg: 'bg-amber-500/10',
-    text: 'text-amber-400',
-    badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  },
-  purple: {
-    border: 'border-purple-500/50',
-    bg: 'bg-purple-500/10',
-    text: 'text-purple-400',
-    badge: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  },
-};
-
 export const AcademicsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('all');
-
-  const tabs = [
-    { id: 'all', label: 'All Programs' },
-    { id: 'stem', label: 'STEM' },
-    { id: 'abm', label: 'ABM' },
-    { id: 'jhs', label: 'Junior High' },
-    { id: 'elem', label: 'Elementary' },
-  ];
-
-  const filtered = activeTab === 'all' ? programs : programs.filter((p) => p.id === activeTab);
+  const [activeTab, setActiveTab] = useState('assh');
+  const selectedProgram = programs.find((p) => p.id === activeTab) ?? programs[0];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-20">
-      {/* Hero */}
-      <div className="relative text-center space-y-5 max-w-3xl mx-auto">
-        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 bg-emerald-500/6 rounded-full blur-3xl pointer-events-none" />
-        <span className="relative text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-400">
-          Academic Offerings
-        </span>
-        <h1 className="relative text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-          Comprehensive K–12 Curriculum
-        </h1>
-        <p className="relative text-slate-400 text-sm leading-relaxed">
-          Explore our progressive academic tracks engineered for college readiness, career
-          excellence, and global competitiveness.
-        </p>
-      </div>
+    <div className="bg-[#FAF8FF] min-h-screen text-slate-900 py-12 lg:py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        {/* Header */}
+        <div className="text-center space-y-3 max-w-3xl mx-auto">
+          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-purple-700">
+            Academic Programs
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-black text-purple-950 tracking-tight">
+            Nurturing Minds, Building Character
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+            Noah's Academy Incorporated offers DepEd-recognized academic programs from Grade 1 through Grade 12, featuring specialized Senior High tracks.
+          </p>
+        </div>
 
-      {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
-              activeTab === tab.id
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white hover:border-slate-700'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Program Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {filtered.map((prog) => {
-          const Icon = prog.icon;
-          const c = accentMap[prog.accent] ?? accentMap.blue;
-          return (
-            <div
-              key={prog.id}
-              className={`group p-8 bg-slate-900 border border-slate-800 rounded-3xl space-y-5 hover:${c.border} hover:-translate-y-0.5 transition-all duration-300`}
+        {/* Program Selector Tabs */}
+        <div className="flex flex-wrap items-center justify-center gap-2 border-b border-purple-100 pb-4">
+          {programs.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setActiveTab(p.id)}
+              className={`px-5 py-2.5 rounded-full text-xs font-extrabold transition-all ${
+                activeTab === p.id
+                  ? 'bg-purple-700 text-white shadow-md shadow-purple-700/25'
+                  : 'bg-white text-purple-950 hover:bg-purple-50 border border-purple-100'
+              }`}
             >
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold border ${c.badge}`}
-                >
-                  {prog.units}
-                </span>
-                <div className={`p-2.5 rounded-xl ${c.bg} ${c.text}`}>
-                  <Icon className="w-5 h-5" />
-                </div>
-              </div>
+              {p.title}
+            </button>
+          ))}
+        </div>
 
-              {/* Title */}
-              <div>
-                <h3 className={`text-xl font-bold text-white group-hover:${c.text} transition-colors`}>
-                  {prog.title}
-                </h3>
-                <p className={`text-xs font-semibold mt-1 ${c.text}`}>{prog.subtitle}</p>
-              </div>
+        {/* Selected Program Showcase */}
+        <div className="bg-white border border-purple-100 rounded-3xl p-8 lg:p-12 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-7 space-y-6">
+            <div className="space-y-2">
+              <span className="px-3 py-1 bg-purple-100 text-purple-800 text-[10px] font-black uppercase tracking-wider rounded-full inline-block">
+                {selectedProgram.tag}
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-purple-950">{selectedProgram.title}</h2>
+              <p className="text-xs font-bold text-purple-700">{selectedProgram.subtitle} · {selectedProgram.units}</p>
+            </div>
 
-              {/* Subject List */}
-              <ul className="space-y-2.5 pt-1">
-                {prog.features.map((feat) => (
-                  <li key={feat} className="flex items-start gap-2.5 text-xs text-slate-300">
-                    <CheckCircle className={`w-4 h-4 ${c.text} shrink-0 mt-0.5`} />
-                    <span>{feat}</span>
-                  </li>
+            <div className="space-y-3 pt-2">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Curriculum Highlights</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {selectedProgram.features.map((feat, idx) => (
+                  <div key={idx} className="flex items-start space-x-2.5 p-3 bg-purple-50/60 rounded-2xl border border-purple-100">
+                    <CheckCircle className="w-4 h-4 text-purple-700 shrink-0 mt-0.5" />
+                    <span className="text-xs font-semibold text-purple-950 leading-tight">{feat}</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
+            </div>
 
-              {/* CTA */}
+            <div className="pt-4">
               <Link
                 to="/admissions"
-                className={`inline-flex items-center gap-1.5 text-xs font-semibold ${c.text} hover:opacity-80 transition-opacity pt-2`}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-purple-700 hover:bg-purple-600 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-purple-700/25 transition-all"
               >
-                <span>Enroll in this track</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span>Enroll in {selectedProgram.title}</span>
+                <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-8 border-t border-slate-800">
-        {[
-          { label: 'Academic Programs', value: '4', color: 'text-blue-400' },
-          { label: 'Qualified Teachers', value: '184+', color: 'text-emerald-400' },
-          { label: 'Subjects Offered', value: '60+', color: 'text-amber-400' },
-          { label: 'Graduate Rate', value: '99.4%', color: 'text-purple-400' },
-        ].map((s) => (
-          <div key={s.label} className="text-center">
-            <div className={`text-3xl font-extrabold font-mono ${s.color}`}>{s.value}</div>
-            <div className="text-xs text-slate-400 mt-1">{s.label}</div>
           </div>
-        ))}
-      </div>
 
-      {/* Bottom CTA */}
-      <div className="text-center">
-        <p className="text-sm text-slate-400 mb-6">
-          Ready to find the right academic track for your child?
-        </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link
-            to="/admissions"
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-500/20"
-          >
-            <GraduationCap className="w-4 h-4" />
-            <span>Start Your Application</span>
-          </Link>
-          <Link
-            to="/contact"
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 font-bold rounded-xl text-sm transition-all"
-          >
-            <span>Ask an Advisor</span>
-          </Link>
+          <div className="lg:col-span-5 bg-gradient-to-br from-purple-950 to-indigo-950 text-white rounded-3xl p-8 space-y-6 shadow-xl text-center">
+            <div className="w-16 h-16 rounded-2xl bg-amber-400 text-purple-950 flex items-center justify-center mx-auto shadow-md">
+              <selectedProgram.icon className="w-8 h-8" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-black text-amber-300">DepEd Accredited</h3>
+              <p className="text-xs text-purple-100 leading-relaxed">
+                Full DepEd recognition with aligned learning competencies, modern learning materials, and continuous student progress monitoring via NAISIS.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

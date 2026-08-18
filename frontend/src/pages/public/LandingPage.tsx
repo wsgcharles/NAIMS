@@ -1,491 +1,440 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  GraduationCap,
-  Award,
   Users,
   ArrowRight,
   Sparkles,
-  ShieldCheck,
-  Calendar,
-  Newspaper,
   ChevronRight,
-  Star,
-  Zap,
+  CheckCircle,
+  Quote,
+  MapPin,
+  Phone,
+  Mail,
   Globe,
+  Clock,
+  ExternalLink,
 } from 'lucide-react';
+import { NoahLogo } from '../../components/brand/NoahLogo';
 
-// ─── Reusable Section Header ───────────────────────────────────────────────
 const SectionLabel: React.FC<{ text: string; color?: string }> = ({
   text,
-  color = 'text-blue-400',
+  color = 'text-purple-700',
 }) => (
-  <span className={`text-[11px] font-bold uppercase tracking-[0.18em] ${color}`}>{text}</span>
+  <span className={`text-[11px] font-black uppercase tracking-[0.2em] ${color}`}>{text}</span>
 );
 
-// ─── Feature Card ──────────────────────────────────────────────────────────
-interface FeatureCardProps {
-  icon: React.ElementType;
-  title: string;
-  desc: string;
-  accent?: string;
-}
-const FeatureCard: React.FC<FeatureCardProps> = ({
-  icon: Icon,
-  title,
-  desc,
-  accent = 'blue',
-}) => {
-  const colorMap: Record<string, string> = {
-    blue: 'bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20',
-    emerald: 'bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20',
-    amber: 'bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/20',
-    purple: 'bg-purple-500/10 text-purple-400 group-hover:bg-purple-500/20',
-  };
-  return (
-    <div className="group relative bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 hover:border-slate-700 hover:-translate-y-0.5 transition-all duration-300">
-      <div
-        className={`p-3 rounded-xl w-12 h-12 flex items-center justify-center mb-4 transition-colors ${
-          colorMap[accent] ?? colorMap.blue
-        }`}
-      >
-        <Icon className="w-6 h-6" />
-      </div>
-      <h3 className="text-sm font-bold text-white mb-2">{title}</h3>
-      <p className="text-xs text-slate-400 leading-relaxed">{desc}</p>
-    </div>
-  );
-};
-
-// ─── Stat Item ─────────────────────────────────────────────────────────────
-const StatItem: React.FC<{ value: string; label: string; color: string }> = ({
-  value,
-  label,
-  color,
-}) => (
-  <div className="text-center">
-    <div className={`text-3xl sm:text-4xl font-extrabold font-mono ${color}`}>{value}</div>
-    <div className="text-[11px] text-slate-400 font-medium mt-1">{label}</div>
-  </div>
-);
-
-// ─── Program Card ──────────────────────────────────────────────────────────
-interface ProgramCardProps {
-  tag: string;
-  title: string;
-  desc: string;
-}
-const ProgramCard: React.FC<ProgramCardProps> = ({ tag, title, desc }) => (
-  <div className="group bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-blue-500/50 hover:-translate-y-0.5 transition-all duration-300">
-    <div>
-      <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-blue-400 px-2.5 py-1 rounded-full bg-blue-950 border border-blue-800 mb-4">
-        {tag}
-      </span>
-      <h3 className="text-base font-bold text-white mb-2 group-hover:text-blue-300 transition-colors">
-        {title}
-      </h3>
-      <p className="text-xs text-slate-400 leading-relaxed">{desc}</p>
-    </div>
-    <Link
-      to="/academics"
-      className="mt-6 inline-flex items-center text-xs font-semibold text-slate-400 hover:text-blue-400 transition-colors group/link"
-    >
-      <span>Learn Details</span>
-      <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover/link:translate-x-0.5 transition-transform" />
-    </Link>
-  </div>
-);
-
-// ─── Page Component ────────────────────────────────────────────────────────
 export const LandingPage: React.FC = () => {
-  const heroRef = useRef<HTMLDivElement>(null);
-
-  // Parallax mouse-glow effect on hero
-  useEffect(() => {
-    const el = heroRef.current;
-    if (!el) return;
-    const handler = (e: MouseEvent) => {
-      const rect = el.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      el.style.setProperty('--glow-x', `${x}%`);
-      el.style.setProperty('--glow-y', `${y}%`);
-    };
-    el.addEventListener('mousemove', handler);
-    return () => el.removeEventListener('mousemove', handler);
-  }, []);
-
-  const programs = [
+  const featuredNews = [
     {
-      tag: 'Early Childhood',
-      title: 'Preschool & K-2',
-      desc: 'Play-based foundational learning developing motor, cognitive, and social skills.',
+      title: 'Graduation Ceremony',
+      category: 'Graduation',
+      date: 'MAY 28, 2026',
+      image: '/images/news/graduation.jpg',
+      desc: 'Honoring Senior High School graduates across ASSH, BE, ICT Support, and Hospitality & Tourism tracks at the Arca South Auditorium.',
     },
     {
-      tag: 'Primary Focus',
-      title: 'Elementary (Grades 1–6)',
-      desc: 'Core literacy, mathematics, science exploration, and arts enrichment.',
+      title: 'Buwan ng Wika Celebration',
+      category: 'Cultural Festival',
+      date: 'AUG 28, 2025',
+      image: '/images/news/buwan-ng-wika.jpg',
+      desc: 'Students perform Sabayang Bigkas recitals and kundiman songs in traditional Filipiniana and Barong Tagalog.',
     },
     {
-      tag: 'Secondary Phase',
-      title: 'Junior High (Grades 7–10)',
-      desc: 'Comprehensive academic prep with robotics, languages, and athletics.',
-    },
-    {
-      tag: 'College Prep',
-      title: 'Senior High (STEM / ABM)',
-      desc: 'Specialized tracks in Science, Technology, Business, and Humanities.',
+      title: 'Foundation Day Celebration',
+      category: 'Foundation Day',
+      date: 'FEB 18, 2026',
+      image: '/images/news/foundation-day.jpg',
+      desc: 'Commemorating the founding of Noah\'s Academy Incorporated in Taguig City with drum & lyre parades and sports finals.',
     },
   ];
 
-  const news = [
-    {
-      title: "Noah's Academy Receives Regional STEM Excellence Award",
-      date: 'July 18, 2026',
-      cat: 'Achievement',
-    },
-    {
-      title: 'AY 2026–2027 Early Bird Enrollment Discount Schedule',
-      date: 'July 10, 2026',
-      cat: 'Admissions',
-    },
+  const upcomingEvents = [
+    { month: 'AUG', day: '20', title: 'Intramurals', time: '08:00 AM — Arca South Covered Athletic Court' },
+    { month: 'OCT', day: '05', title: 'Teachers\' Day Celebration', time: '09:00 AM — Main Auditorium' },
+    { month: 'DEC', day: '15', title: 'Christmas Program', time: '01:30 PM — Main Auditorium' },
   ];
 
-  const events = [
+  const galleryPreviews = [
+    { title: 'Main Academic Building', cat: 'Arca South Facilities', image: '/images/campus/building.jpg' },
+    { title: 'Computer Laboratory', cat: 'Facilities', image: '/images/campus/computer-lab.jpg' },
+    { title: 'Resource Library', cat: 'Facilities', image: '/images/campus/library.jpg' },
+    { title: 'Covered Court', cat: 'Facilities', image: '/images/campus/covered-court.jpg' },
+  ];
+
+  const verifiedAchievements = [
     {
-      title: 'Parent-Teacher Orientation Conference',
-      date: 'Aug 5, 2026',
-      location: 'Main Auditorium',
+      title: 'DepEd K-12 Accreditation',
+      desc: 'Full recognition for Elementary (Grades 1–6), Junior High (Grades 7–10), and Senior High tracks.',
+      badge: 'Official Recognition',
     },
     {
-      title: 'Annual Foundation Day & Sports Fest',
-      date: 'Aug 20, 2026',
-      location: 'Academy Sports Complex',
+      title: 'ASSH & ICT Innovation Honors',
+      desc: 'Student research and technical project commendations in inter-school regional showcases.',
+      badge: 'Academic Honor',
+    },
+    {
+      title: 'Arca South Campus Excellence',
+      desc: 'Modern educational facilities serving learners across Taguig City and Metro Manila.',
+      badge: 'Campus Milestone',
     },
   ];
 
   return (
-    <div className="space-y-28 pb-24">
-      {/* ══════════════════════════════════════════
-          SECTION 1 — HERO
-      ══════════════════════════════════════════ */}
-      <section ref={heroRef} className="relative pt-20 pb-32 overflow-hidden">
-        {/* Ambient glows */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-blue-600/12 rounded-full blur-3xl" />
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/8 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/8 rounded-full blur-3xl" />
-          {/* Animated grid lines */}
-          <div className="absolute inset-0 [background-image:linear-gradient(rgba(148,163,184,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.03)_1px,transparent_1px)] [background-size:80px_80px]" />
+    <div className="bg-[#FAF8FF] min-h-screen text-slate-900 font-sans">
+      {/* HERO SECTION — High Quality Campus Image Overlay Banner */}
+      <section className="relative overflow-hidden bg-purple-950 text-white pt-16 pb-24 lg:pt-20 lg:pb-32">
+        {/* Subtle Dark Overlay over Beneficiary Campus Hero Image */}
+        <div className="absolute inset-0 z-0 opacity-25 mix-blend-overlay">
+          <img src="/images/hero/campus-hero.jpg" alt="Noah's Academy Incorporated Arca South Campus Hero" className="w-full h-full object-cover" />
         </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-950/95 via-purple-900/90 to-indigo-950/95 z-0" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-[11px] font-bold uppercase tracking-widest mb-8 animate-pulse-slow">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Admissions Open — AY 2026–2027</span>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Left Hero Content */}
+            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-800/80 border border-purple-700/80 text-amber-300 text-xs font-bold shadow-md">
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>K–12 Basic Education · Taguig City</span>
+              </div>
 
-          {/* Headline */}
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.08] max-w-5xl mx-auto">
-            Empowering Future Leaders
-            <br />
-            Through{' '}
-            <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent">
-              Excellence in Education
-            </span>
-          </h1>
+              <div className="space-y-2">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
+                  NOAH'S ACADEMY INCORPORATED
+                </h1>
+                <p className="text-2xl sm:text-3xl font-extrabold text-amber-300 tracking-wide uppercase">
+                  ARCA SOUTH CAMPUS
+                </p>
+              </div>
 
-          <p className="mt-7 text-base sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed font-normal">
-            Noah's Academy delivers a technology-driven learning ecosystem engineered for academic
-            rigor, character development, and lifelong achievement.
-          </p>
+              <p className="text-sm sm:text-base text-purple-100 max-w-2xl leading-relaxed font-medium mx-auto lg:mx-0">
+                Welcome to Noah's Academy Incorporated – Arca South Campus. Providing quality Grade 1 to 12 basic education, nurturing academic excellence, leadership, and Christian values in Taguig City.
+              </p>
 
-          {/* CTAs */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              to="/admissions"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold rounded-2xl shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 transition-all hover:scale-[1.02] text-sm"
-            >
-              <span>Apply for Admission</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              to="/login"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 font-bold rounded-2xl transition-all text-sm"
-            >
-              <GraduationCap className="w-4 h-4 text-blue-400" />
-              <span>EduCore Portal Login</span>
-            </Link>
-          </div>
+              {/* Action CTAs */}
+              <div className="pt-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                <Link
+                  to="/admissions"
+                  className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-amber-400 hover:bg-amber-300 text-purple-950 font-black rounded-2xl text-xs uppercase tracking-wider shadow-xl shadow-amber-400/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <span>Apply Now</span>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
 
-          {/* Key Metrics */}
-          <div className="mt-20 max-w-3xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 pt-12 border-t border-slate-800/60">
-            <StatItem value="2,480+" label="Enrolled Students" color="text-white" />
-            <StatItem value="99.4%" label="Graduation Rate" color="text-emerald-400" />
-            <StatItem value="184+" label="Licensed Educators" color="text-blue-400" />
-            <StatItem value="25+" label="Years Excellence" color="text-amber-400" />
-          </div>
-        </div>
-      </section>
+                <Link
+                  to="/academics"
+                  className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-purple-800/80 hover:bg-purple-700 text-white font-extrabold rounded-2xl text-xs uppercase tracking-wider border border-purple-600/80 transition-all hover:scale-[1.02]"
+                >
+                  <Users className="w-4 h-4 mr-2 text-amber-300" />
+                  <span>Explore Programs</span>
+                </Link>
+              </div>
 
-      {/* ══════════════════════════════════════════
-          SECTION 2 — SCHOOL OVERVIEW
-      ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-800 rounded-3xl p-8 lg:p-14 grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
-          <div className="space-y-6">
-            <SectionLabel text="About Noah's Academy" />
-            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight leading-tight">
-              A Legacy of Academic Innovation &amp; Character Building
-            </h2>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Founded with the vision to nurture well-rounded, compassionate, and academically
-              skilled leaders, Noah's Academy combines traditional values with modern educational
-              technology — all managed through EduCore, our integrated school management platform.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                {
-                  icon: ShieldCheck,
-                  label: 'Mission',
-                  text: 'Transformative education through holistic curricula and technology.',
-                  color: 'text-blue-400 bg-blue-500/10',
-                },
-                {
-                  icon: Award,
-                  label: 'Vision',
-                  text: 'Premier institution recognized for global student excellence.',
-                  color: 'text-emerald-400 bg-emerald-500/10',
-                },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.label}
-                    className="p-4 bg-slate-950/70 rounded-2xl border border-slate-800 hover:border-slate-700 transition-colors"
-                  >
-                    <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${item.color}`}
-                    >
-                      <Icon className="w-5 h-5" />
+              {/* Quick Metrics */}
+              <div className="pt-6 border-t border-purple-800/80 grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-black text-amber-300">Grade 1 to 12</div>
+                  <div className="text-[11px] font-semibold text-purple-200">DepEd Recognized</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-white">Arca South</div>
+                  <div className="text-[11px] font-semibold text-purple-200">31 DBP Avenue</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-amber-300">Taguig</div>
+                  <div className="text-[11px] font-semibold text-purple-200">Metro Manila</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Hero Admissions Feature Card */}
+            <div className="lg:col-span-5">
+              <div className="bg-white text-slate-900 rounded-3xl p-8 shadow-2xl border-4 border-purple-200/80 relative space-y-6">
+                <div className="flex items-center justify-between border-b border-purple-100 pb-4">
+                  <div className="flex items-center space-x-3">
+                    <NoahLogo size="sm" showText={false} />
+                    <div>
+                      <h3 className="font-black text-base text-purple-950">Arca South Admissions</h3>
+                      <p className="text-[11px] text-slate-500">AY 2026–2027 Open Enrollment</p>
                     </div>
-                    <h4 className="font-bold text-white text-sm mb-1">{item.label}</h4>
-                    <p className="text-xs text-slate-400 leading-relaxed">{item.text}</p>
                   </div>
-                );
-              })}
-            </div>
-            <Link
-              to="/about"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              <span>Learn about our institution</span>
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
+                  <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-extrabold text-[10px] uppercase tracking-wider rounded-full">
+                    Accepting
+                  </span>
+                </div>
 
-          {/* Principal's Welcome */}
-          <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-950/80 p-8 flex flex-col items-center text-center space-y-5">
-            <div className="absolute inset-0 [background:radial-gradient(ellipse_at_center,rgba(59,130,246,0.08),transparent_70%)] pointer-events-none" />
-            <div className="relative p-4 bg-blue-600/20 text-blue-400 rounded-full w-20 h-20 flex items-center justify-center">
-              <GraduationCap className="w-10 h-10" />
-            </div>
-            <h3 className="text-lg font-bold text-white">
-              Welcome Message from the Principal
-            </h3>
-            <div className="flex gap-0.5">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-              ))}
-            </div>
-            <blockquote className="text-sm italic text-slate-300 leading-relaxed max-w-sm">
-              "At Noah's Academy, we empower our learners to reach their highest potential in a
-              supportive, innovative atmosphere. We welcome you to join our thriving academic
-              family."
-            </blockquote>
-            <div className="pt-2 border-t border-slate-800 w-full">
-              <p className="text-xs font-bold text-blue-400">— Dr. Robert Vance</p>
-              <p className="text-[11px] text-slate-500">School Principal</p>
+                <div className="space-y-3 text-xs">
+                  <div className="p-3.5 bg-purple-50 rounded-2xl border border-purple-100 flex items-start space-x-3">
+                    <CheckCircle className="w-4 h-4 text-purple-700 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-purple-950">Elementary & Junior High (Grades 1–10)</span>
+                      <p className="text-[11px] text-slate-600">Foundation literacy, numeracy, and core character values.</p>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 bg-purple-50 rounded-2xl border border-purple-100 flex items-start space-x-3">
+                    <CheckCircle className="w-4 h-4 text-purple-700 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-purple-950">Senior High Track Offerings</span>
+                      <p className="text-[11px] text-slate-600">ASSH, Business Entrepreneurship (BE), ICT Support, Hospitality & Tourism.</p>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 bg-purple-50 rounded-2xl border border-purple-100 flex items-start space-x-3">
+                    <CheckCircle className="w-4 h-4 text-purple-700 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-purple-950">Grade 12 Specializations</span>
+                      <p className="text-[11px] text-slate-600">ABM, HUMSS 201, GAS, AD, HE, and ICT tracks.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Link
+                  to="/admissions"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-purple-700 hover:bg-purple-600 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-purple-700/25 transition-all"
+                >
+                  <span>Start Online Application</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          SECTION 3 — WHY CHOOSE US
-      ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <SectionLabel text="Why Noah's Academy" />
-          <h2 className="mt-3 text-3xl font-bold text-white">
-            An Education Designed for the Future
-          </h2>
-          <p className="text-slate-400 text-sm mt-3 max-w-xl mx-auto leading-relaxed">
-            A safe, tech-enabled environment built to cultivate every student's unique potential.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          <FeatureCard
-            icon={Users}
-            title="Licensed & Expert Faculty"
-            desc="All educators hold advanced degrees and certified pedagogical training."
-            accent="blue"
-          />
-          <FeatureCard
-            icon={Zap}
-            title="Technology-Driven Learning"
-            desc="EduCore provides real-time gradebooks, digital ledgers, and attendance tracking."
-            accent="amber"
-          />
-          <FeatureCard
-            icon={ShieldCheck}
-            title="Safe & Secure Campus"
-            desc="24/7 security, automated student gate check-ins, and instant guardian alerts."
-            accent="emerald"
-          />
-          <FeatureCard
-            icon={Globe}
-            title="Globally Competitive Graduates"
-            desc="Our alumni go on to lead in universities and industries across the globe."
-            accent="purple"
-          />
+      {/* PRINCIPAL'S / SCHOOL ADMINISTRATION WELCOME */}
+      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white border border-purple-100 rounded-3xl p-8 lg:p-12 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-4 flex flex-col items-center text-center space-y-3 border-b lg:border-b-0 lg:border-r border-purple-100 pb-6 lg:pb-0 lg:pr-8">
+            <div className="w-24 h-24 rounded-full bg-purple-950 p-1 border-4 border-amber-400 shadow-lg overflow-hidden">
+              <img src="/noahs-logo.jpg" alt="Noah's Academy Arca South Directress Seal" className="w-full h-full object-cover rounded-full" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-purple-950">School Administration</h3>
+              <p className="text-[11px] font-bold text-purple-700">Arca South Campus</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Taguig City, Metro Manila</p>
+            </div>
+          </div>
+
+          <div className="lg:col-span-8 space-y-4">
+            <div className="flex items-center space-x-2 text-amber-500">
+              <Quote className="w-6 h-6" />
+              <SectionLabel text="Institutional Welcome" />
+            </div>
+            <h2 className="text-2xl font-black text-purple-950 leading-tight">
+              Welcome to Noah's Academy Incorporated – Arca South Campus
+            </h2>
+            <p className="text-xs text-slate-700 leading-relaxed font-medium">
+              "Noah's Academy Incorporated – Arca South Campus provides quality basic education in Taguig City while nurturing academic excellence, leadership, and Christian values. On behalf of our dedicated faculty and staff, we welcome learners and parents to our official management platform."
+            </p>
+            <div className="pt-2 text-[11px] font-bold text-purple-950 italic">
+              — Office of the School Administration · Arca South Campus
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          SECTION 4 — ACADEMIC PROGRAMS
-      ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
-          <div>
-            <SectionLabel text="Academic Offerings" color="text-emerald-400" />
-            <h2 className="mt-2 text-3xl font-bold text-white">Curriculum & Track Options</h2>
+      {/* QUICK CONTACT CARDS */}
+      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="text-center space-y-2 max-w-2xl mx-auto">
+          <SectionLabel text="Quick Contact" />
+          <h2 className="text-3xl font-black text-purple-950">Connect with Arca South Campus</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="p-5 bg-white border border-purple-100 rounded-3xl space-y-2 text-center shadow-xs">
+            <MapPin className="w-6 h-6 text-purple-700 mx-auto" />
+            <h4 className="font-extrabold text-xs text-purple-950 uppercase">Address</h4>
+            <p className="text-[11px] text-slate-600 font-medium">31 DBP Avenue, Arca South, Taguig City</p>
           </div>
-          <Link
-            to="/academics"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors"
+
+          <div className="p-5 bg-white border border-purple-100 rounded-3xl space-y-2 text-center shadow-xs">
+            <Phone className="w-6 h-6 text-purple-700 mx-auto" />
+            <h4 className="font-extrabold text-xs text-purple-950 uppercase">Phone</h4>
+            <p className="text-[11px] text-slate-600 font-medium">(02) 8423-9185 / 0917-123-4567</p>
+          </div>
+
+          <div className="p-5 bg-white border border-purple-100 rounded-3xl space-y-2 text-center shadow-xs">
+            <Mail className="w-6 h-6 text-purple-700 mx-auto" />
+            <h4 className="font-extrabold text-xs text-purple-950 uppercase">Email</h4>
+            <p className="text-[11px] text-slate-600 font-medium">arca-south@noahsacademy.edu.ph</p>
+          </div>
+
+          <div className="p-5 bg-white border border-purple-100 rounded-3xl space-y-2 text-center shadow-xs">
+            <Globe className="w-6 h-6 text-purple-700 mx-auto" />
+            <h4 className="font-extrabold text-xs text-purple-950 uppercase">Facebook</h4>
+            <p className="text-[11px] text-purple-700 font-bold hover:underline">Noah's Academy Arca South</p>
+          </div>
+
+          <div className="p-5 bg-white border border-purple-100 rounded-3xl space-y-2 text-center shadow-xs">
+            <Clock className="w-6 h-6 text-purple-700 mx-auto" />
+            <h4 className="font-extrabold text-xs text-purple-950 uppercase">Office Hours</h4>
+            <p className="text-[11px] text-slate-600 font-medium">Mon–Fri 7:30AM–5PM<br />Sat 8:00AM–12PM</p>
+          </div>
+        </div>
+
+        <div className="text-center pt-2">
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=31+DBP+Avenue+Arca+South+Taguig+City"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-purple-700 hover:bg-purple-600 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-md transition-all"
           >
-            <span>Explore Full Curriculum</span>
-            <ArrowRight className="w-4 h-4" />
+            <MapPin className="w-4 h-4 text-amber-300" />
+            <span>Visit Campus (Open in Google Maps)</span>
+            <ExternalLink className="w-3.5 h-3.5 ml-1" />
+          </a>
+        </div>
+      </section>
+
+      {/* LATEST CAMPUS NEWS & HIGHLIGHTS */}
+      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-purple-100 pb-6">
+          <div className="space-y-2">
+            <SectionLabel text="Official Bulletin" />
+            <h2 className="text-3xl font-black text-purple-950">Latest News & Activity Highlights</h2>
+          </div>
+          <Link to="/news" className="text-xs font-bold text-purple-700 hover:text-purple-900 inline-flex items-center">
+            <span>Explore all news articles</span>
+            <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {programs.map((prog) => (
-            <ProgramCard key={prog.tag} {...prog} />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {featuredNews.map((news, idx) => (
+            <div key={idx} className="bg-white border border-purple-100 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all flex flex-col justify-between group">
+              <div className="space-y-3">
+                <div className="h-48 overflow-hidden bg-purple-950 relative">
+                  <img src={news.image} alt={news.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <span className="absolute top-3 left-3 px-2.5 py-0.5 bg-amber-400 text-purple-950 font-black text-[10px] uppercase rounded-full">
+                    {news.category}
+                  </span>
+                </div>
+                <div className="p-6 space-y-2">
+                  <span className="text-[11px] font-mono font-bold text-slate-400">{news.date}</span>
+                  <h3 className="font-extrabold text-base text-purple-950 group-hover:text-purple-700 transition-colors leading-snug">{news.title}</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">{news.desc}</p>
+                </div>
+              </div>
+
+              <div className="p-6 pt-0">
+                <Link to="/news" className="text-xs font-bold text-purple-700 hover:underline inline-flex items-center">
+                  <span>Read complete post</span>
+                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                </Link>
+              </div>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          SECTION 5 — NEWS + EVENTS
-      ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Latest News */}
-        <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Newspaper className="w-5 h-5 text-blue-400" />
-              Latest Announcements
-            </h3>
-            <Link
-              to="/news"
-              className="text-xs text-blue-400 hover:text-blue-300 font-semibold transition-colors"
-            >
-              View All →
-            </Link>
+      {/* INSTITUTIONAL ACHIEVEMENTS */}
+      <section className="py-16 bg-white border-y border-purple-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="text-center space-y-2 max-w-2xl mx-auto">
+            <SectionLabel text="Verified Achievements" />
+            <h2 className="text-3xl font-black text-purple-950">Institutional & Academic Recognitions</h2>
+            <p className="text-xs text-slate-600">Official recognitions publicly shared by Noah's Academy Incorporated.</p>
           </div>
-          <div className="space-y-3">
-            {news.map((item, i) => (
-              <div
-                key={i}
-                className="group p-4 bg-slate-950/80 rounded-xl border border-slate-800/80 hover:border-slate-700 transition-colors cursor-pointer"
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                    {item.cat}
-                  </span>
-                  <span className="text-[10px] text-slate-500">{item.date}</span>
-                </div>
-                <h4 className="text-sm font-semibold text-white group-hover:text-blue-300 transition-colors leading-snug">
-                  {item.title}
-                </h4>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Upcoming Events */}
-        <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-amber-400" />
-              Upcoming Events
-            </h3>
-            <Link
-              to="/events"
-              className="text-xs text-blue-400 hover:text-blue-300 font-semibold transition-colors"
-            >
-              View Calendar →
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {events.map((ev, i) => (
-              <div
-                key={i}
-                className="p-4 bg-slate-950/80 rounded-xl border border-slate-800/80 flex items-center justify-between gap-4 hover:border-slate-700 transition-colors"
-              >
-                <div>
-                  <h4 className="text-sm font-semibold text-white leading-snug">{ev.title}</h4>
-                  <span className="text-[11px] text-slate-400 mt-1 block">{ev.location}</span>
-                </div>
-                <span className="px-3 py-1.5 bg-amber-500/10 text-amber-400 font-mono text-[11px] font-bold rounded-lg border border-amber-500/20 shrink-0 whitespace-nowrap">
-                  {ev.date}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {verifiedAchievements.map((ach, idx) => (
+              <div key={idx} className="p-7 bg-[#FAF8FF] border border-purple-100 rounded-3xl space-y-3 shadow-xs">
+                <span className="px-3 py-1 bg-purple-100 text-purple-800 text-[10px] font-black uppercase rounded-full inline-block">
+                  {ach.badge}
                 </span>
+                <h3 className="text-base font-extrabold text-purple-950">{ach.title}</h3>
+                <p className="text-xs text-slate-600 leading-relaxed font-medium">{ach.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          SECTION 6 — CTA BANNER
-      ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-10 sm:p-16 text-center text-white shadow-2xl shadow-blue-900/30">
-          {/* Decorative grid */}
-          <div className="absolute inset-0 [background-image:linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:60px_60px] pointer-events-none" />
-          {/* Ambient blobs */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-400/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 max-w-3xl mx-auto space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[11px] font-bold uppercase tracking-widest">
-              <Sparkles className="w-3 h-3" />
-              <span>Now Accepting Applications</span>
-            </div>
-            <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-              Ready to Begin Your Educational Journey?
-            </h2>
-            <p className="text-blue-100 text-sm sm:text-base leading-relaxed">
-              Applications for AY 2026–2027 are processed online through the EduCore Registrar
-              System — fast, paperless, and tracked in real time.
+      {/* UPCOMING ACTIVITIES & CAMPUS GALLERY PREVIEW */}
+      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-5 space-y-6">
+            <SectionLabel text="Campus Calendar" />
+            <h2 className="text-3xl font-black text-purple-950">Upcoming Activities</h2>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Stay updated with Arca South Campus intramurals, research fairs, parent orientations, and holiday presentations.
             </p>
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/admissions"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-blue-700 font-extrabold rounded-2xl hover:bg-blue-50 transition-all shadow-xl text-sm"
-              >
-                <span>Apply Online Now</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/contact"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl border border-white/20 transition-all text-sm"
-              >
-                <span>Schedule Campus Tour</span>
-              </Link>
+            <Link to="/events" className="inline-flex items-center px-6 py-3 bg-purple-700 hover:bg-purple-600 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-md">
+              <span>View Full Calendar</span>
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </div>
+
+          <div className="lg:col-span-7 space-y-4">
+            {upcomingEvents.map((ev, idx) => (
+              <div key={idx} className="p-5 bg-white border border-purple-100 rounded-3xl flex items-center space-x-4 shadow-xs">
+                <div className="w-14 h-14 rounded-2xl bg-purple-700 text-white flex flex-col items-center justify-center shrink-0 shadow-xs">
+                  <span className="text-[10px] font-black uppercase text-amber-300">{ev.month}</span>
+                  <span className="text-lg font-black">{ev.day}</span>
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm text-purple-950">{ev.title}</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">{ev.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Gallery Preview */}
+        <div className="space-y-8 pt-8 border-t border-purple-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <SectionLabel text="Photo Gallery" />
+              <h3 className="text-2xl font-black text-purple-950">Arca South Campus in Pictures</h3>
             </div>
+            <Link to="/gallery" className="text-xs font-bold text-purple-700 hover:underline">
+              View complete photo archives →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {galleryPreviews.map((g, idx) => (
+              <Link key={idx} to="/gallery" className="group bg-white border border-purple-100 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all">
+                <div className="h-44 overflow-hidden bg-purple-950 relative">
+                  <img src={g.image} alt={g.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <span className="absolute top-3 left-3 px-2.5 py-0.5 bg-purple-950/80 text-amber-300 text-[10px] font-bold uppercase rounded-full">
+                    {g.cat}
+                  </span>
+                </div>
+                <div className="p-4">
+                  <h4 className="font-extrabold text-xs text-purple-950 group-hover:text-purple-700 transition-colors">{g.title}</h4>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FINAL CALL TO ACTION */}
+      <section className="py-16 bg-white border-t border-purple-100">
+        <div className="max-w-5xl mx-auto px-4 text-center space-y-6">
+          <NoahLogo size="md" showText={false} />
+          <h2 className="text-3xl sm:text-4xl font-black text-purple-950 tracking-tight">
+            Join Noah's Academy Incorporated – Arca South Campus
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
+            Give your child the gift of quality basic education, moral values, and academic empowerment. Enrollment is ongoing for Grade 1 through Grade 12.
+          </p>
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              to="/admissions"
+              className="px-8 py-3.5 bg-purple-700 hover:bg-purple-600 text-white font-extrabold rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-purple-700/25 transition-all"
+            >
+              Start Admission Application
+            </Link>
+            <Link
+              to="/contact"
+              className="px-8 py-3.5 bg-purple-50 hover:bg-purple-100 text-purple-950 font-bold rounded-2xl text-xs uppercase tracking-wider border border-purple-200 transition-all shadow-xs"
+            >
+              Schedule Campus Visit
+            </Link>
           </div>
         </div>
       </section>

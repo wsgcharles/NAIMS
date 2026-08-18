@@ -11,11 +11,15 @@ public class AccountingService : IAccountingService
 {
     private readonly EduCoreDbContext _context;
     private readonly IEmailService _emailService;
+    private readonly INotificationService _notificationService;
+    private readonly IAuditLogService _auditLogService;
 
-    public AccountingService(EduCoreDbContext context, IEmailService emailService)
+    public AccountingService(EduCoreDbContext context, IEmailService emailService, INotificationService notificationService, IAuditLogService auditLogService)
     {
         _context = context;
         _emailService = emailService;
+        _notificationService = notificationService;
+        _auditLogService = auditLogService;
     }
 
     #region School Fees Catalog
@@ -25,6 +29,7 @@ public class AccountingService : IAccountingService
         var query = _context.SchoolFees
             .Include(x => x.AcademicYear)
             .Include(x => x.GradeLevel)
+            .Where(x => !x.IsDeleted)
             .AsQueryable();
 
         if (academicYearId.HasValue)
@@ -33,18 +38,19 @@ public class AccountingService : IAccountingService
         if (gradeLevelId.HasValue)
             query = query.Where(x => x.GradeLevelId == null || x.GradeLevelId == gradeLevelId.Value);
 
-        return await query
+        var fees = await query
             .OrderBy(x => x.FeeName)
-            .Select(x => MapToFeeResponse(x))
             .ToListAsync();
+        return fees.Select(MapToFeeResponse).ToList();
     }
+
 
     public async Task<SchoolFeeResponse?> GetSchoolFeeByIdAsync(int id)
     {
         var fee = await _context.SchoolFees
             .Include(x => x.AcademicYear)
             .Include(x => x.GradeLevel)
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
 
         return fee == null ? null : MapToFeeResponse(fee);
     }
@@ -66,6 +72,8 @@ public class AccountingService : IAccountingService
         _context.SchoolFees.Add(fee);
         await _context.SaveChangesAsync();
 
+        await _auditLogService.LogAsync("SchoolFee.Create", "SchoolFee", fee.Id.ToString(), $"Created fee category '{fee.FeeName}' ({fee.Amount:N2}).");
+
         return await GetSchoolFeeByIdAsync(fee.Id)
             ?? throw new InvalidOperationException("Failed to retrieve created school fee.");
     }
@@ -85,6 +93,9 @@ public class AccountingService : IAccountingService
         fee.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        await _auditLogService.LogAsync("SchoolFee.Update", "SchoolFee", fee.Id.ToString(), $"Updated fee category '{fee.FeeName}'.");
+
         return await GetSchoolFeeByIdAsync(id);
     }
 
@@ -96,6 +107,9 @@ public class AccountingService : IAccountingService
         fee.IsDeleted = true;
         fee.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        await _auditLogService.LogAsync("SchoolFee.Delete", "SchoolFee", id.ToString(), $"Deleted fee category '{fee.FeeName}'.");
+
         return true;
     }
 
@@ -108,7 +122,7 @@ public class AccountingService : IAccountingService
         var enrollment = await _context.Enrollments
             .Include(e => e.Student)
             .Include(e => e.Section)
-                .ThenInclude(s => s.ProgramOffering)
+                .ThenInclude(s => s!.ProgramOffering)
             .FirstOrDefaultAsync(e => e.Id == enrollmentId)
             ?? throw new InvalidOperationException("Enrollment record not found.");
 
@@ -122,8 +136,18 @@ public class AccountingService : IAccountingService
                 ?? throw new InvalidOperationException("Failed to load existing bill.");
         }
 
-        var gradeLevelId = enrollment.Section.ProgramOffering.GradeLevelId;
-        var academicYearId = enrollment.Section.ProgramOffering.AcademicYearId;
+        int gradeLevelId = enrollment.Section?.ProgramOffering?.GradeLevelId ?? 0;
+        int academicYearId = enrollment.Section?.ProgramOffering?.AcademicYearId ?? enrollment.AcademicYearId;
+
+        if (gradeLevelId == 0 && enrollment.SectionId.HasValue)
+        {
+            var sec = await _context.Sections.Include(s => s.ProgramOffering).FirstOrDefaultAsync(s => s.Id == enrollment.SectionId.Value);
+            if (sec?.ProgramOffering != null)
+            {
+                gradeLevelId = sec.ProgramOffering.GradeLevelId;
+                academicYearId = sec.ProgramOffering.AcademicYearId;
+            }
+        }
 
         // Fetch applicable fees
         var applicableFees = await _context.SchoolFees
@@ -174,11 +198,11 @@ public class AccountingService : IAccountingService
     {
         var bill = await _context.StudentBills
             .Include(b => b.Enrollment)
-                .ThenInclude(e => e.Student)
+                .ThenInclude(e => e!.Student)
             .Include(b => b.Enrollment)
-                .ThenInclude(e => e.Section)
-                    .ThenInclude(s => s.ProgramOffering)
-                        .ThenInclude(po => po.GradeLevel)
+                .ThenInclude(e => e!.Section)
+                    .ThenInclude(s => s!.ProgramOffering)
+                        .ThenInclude(po => po!.GradeLevel)
             .Include(b => b.BillItems)
             .Include(b => b.Payments)
                 .ThenInclude(p => p.OfficialReceipt)
@@ -193,17 +217,17 @@ public class AccountingService : IAccountingService
     {
         var bills = await _context.StudentBills
             .Include(b => b.Enrollment)
-                .ThenInclude(e => e.Student)
+                .ThenInclude(e => e!.Student)
             .Include(b => b.Enrollment)
-                .ThenInclude(e => e.Section)
-                    .ThenInclude(s => s.ProgramOffering)
-                        .ThenInclude(po => po.GradeLevel)
+                .ThenInclude(e => e!.Section)
+                    .ThenInclude(s => s!.ProgramOffering)
+                        .ThenInclude(po => po!.GradeLevel)
             .Include(b => b.BillItems)
             .Include(b => b.Payments)
                 .ThenInclude(p => p.OfficialReceipt)
             .Include(b => b.Payments)
                 .ThenInclude(p => p.ProcessedBy)
-            .Where(b => b.Enrollment.StudentId == studentId)
+            .Where(b => b.EnrollmentId != null && b.Enrollment!.StudentId == studentId)
             .OrderByDescending(b => b.CreatedAt)
             .ToListAsync();
 
@@ -212,13 +236,253 @@ public class AccountingService : IAccountingService
 
     #endregion
 
+    #region Queue & Application Assessment
+
+    public async Task<List<AccountingQueueItemDto>> GetAccountingQueueAsync(string? stage = null)
+    {
+        var applications = await _context.EnrollmentApplications
+            .Where(a => a.HasRegistrarVerificationSlip || a.Status == EnrollmentApplicationStatus.Approved || a.Status == EnrollmentApplicationStatus.AccountingAssessment || a.Status == EnrollmentApplicationStatus.PaymentConfirmed)
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync();
+
+        var activeSy = await _context.AcademicYears.Where(sy => sy.Status == AcademicYearStatus.Current).Select(sy => sy.SchoolYear).FirstOrDefaultAsync() ?? "2026-2027";
+
+        var appIds = applications.Select(a => a.Id).ToList();
+        var bills = await _context.StudentBills
+            .Where(b => b.EnrollmentApplicationId.HasValue && appIds.Contains(b.EnrollmentApplicationId.Value))
+            .Include(b => b.Payments)
+            .ToListAsync();
+
+        var result = new List<AccountingQueueItemDto>();
+
+        foreach (var app in applications)
+        {
+            var bill = bills.FirstOrDefault(b => b.EnrollmentApplicationId == app.Id);
+            var queueStage = "ReadyForAssessment";
+            if (bill != null)
+            {
+                if (bill.Balance <= 0 || app.Status == EnrollmentApplicationStatus.PaymentConfirmed || bill.FinancialClearanceStatus == "Cleared")
+                {
+                    queueStage = "Paid";
+                }
+                else
+                {
+                    queueStage = "AssessmentInProgress";
+                }
+            }
+
+            if (!string.IsNullOrEmpty(stage) && !string.Equals(stage, "All", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.Equals(queueStage, stage, StringComparison.OrdinalIgnoreCase))
+                    continue;
+            }
+
+            result.Add(new AccountingQueueItemDto
+            {
+                ApplicationId = app.Id,
+                ApplicationNumber = app.ApplicationNumber,
+                ApplicantName = $"{app.FirstName} {app.LastName}",
+                GradeApplyingFor = app.GradeApplyingFor,
+                SchoolYear = activeSy,
+                VerificationSlipNumber = app.VerificationSlipNumber ?? "SLIP-NOT-ISSUED",
+                DateVerified = app.VerificationSlipGeneratedAt,
+                AssignedRegistrar = "Registrar Office",
+                Status = app.Status.ToString(),
+                QueueStage = queueStage,
+                FinancialClearanceStatus = bill?.FinancialClearanceStatus ?? "Pending",
+                BillId = bill?.Id,
+                TotalBilled = bill?.TotalAmount ?? 0,
+                TotalPaid = bill?.AmountPaid ?? 0,
+                RemainingBalance = bill?.Balance ?? 0
+            });
+        }
+
+        return result;
+    }
+
+    public async Task<StudentBillResponse> GenerateAssessmentForApplicationAsync(GenerateAssessmentRequest request, int? createdByUserId = null)
+    {
+        var app = await _context.EnrollmentApplications.FindAsync(request.ApplicationId)
+            ?? throw new InvalidOperationException($"Application #{request.ApplicationId} not found.");
+
+        if (!app.HasRegistrarVerificationSlip)
+        {
+            throw new InvalidOperationException("Registrar Verification Slip must be generated before Accounting Assessment.");
+        }
+
+        var existingBill = await _context.StudentBills
+            .Include(b => b.BillItems)
+            .Include(b => b.Payments)
+            .FirstOrDefaultAsync(b => b.EnrollmentApplicationId == app.Id);
+
+        var settings = await _context.SchoolSettings.FirstOrDefaultAsync();
+        var billPrefix = settings?.BillNumberPrefix ?? "BILL-";
+
+        if (existingBill == null)
+        {
+            var billCount = await _context.StudentBills.CountAsync() + 1;
+            var billNumber = $"{billPrefix}{DateTime.UtcNow.Year}-{billCount:D6}";
+
+            var bill = new StudentBill
+            {
+                BillNumber = billNumber,
+                EnrollmentApplicationId = app.Id,
+                SubTotal = request.TuitionFee + request.MiscellaneousFee + request.LaboratoryFee + request.BooksFee,
+                DiscountAmount = request.VoucherAmount + request.DiscountAmount,
+                DiscountRemarks = request.DiscountRemarks,
+                TotalAmount = (request.TuitionFee + request.MiscellaneousFee + request.LaboratoryFee + request.BooksFee) - (request.VoucherAmount + request.DiscountAmount),
+                AmountPaid = 0,
+                Status = BillStatus.Pending,
+                FinancialClearanceStatus = "Pending",
+                DueDate = request.DueDate ?? DateTime.UtcNow.AddDays(30),
+                CreatedAt = DateTime.UtcNow,
+                CreatedByUserId = createdByUserId
+            };
+
+            if (request.TuitionFee > 0)
+                bill.BillItems.Add(new StudentBillItem { FeeName = "Tuition Fee", Amount = request.TuitionFee });
+            if (request.MiscellaneousFee > 0)
+                bill.BillItems.Add(new StudentBillItem { FeeName = "Miscellaneous Fees", Amount = request.MiscellaneousFee });
+            if (request.LaboratoryFee > 0)
+                bill.BillItems.Add(new StudentBillItem { FeeName = "Laboratory Fees", Amount = request.LaboratoryFee });
+            if (request.BooksFee > 0)
+                bill.BillItems.Add(new StudentBillItem { FeeName = "Books & Learning Materials", Amount = request.BooksFee });
+            if (request.VoucherAmount > 0)
+                bill.BillItems.Add(new StudentBillItem { FeeName = "ESC / QVR Voucher", Amount = -request.VoucherAmount });
+            if (request.DiscountAmount > 0)
+                bill.BillItems.Add(new StudentBillItem { FeeName = "Tuition Discount", Amount = -request.DiscountAmount, Notes = request.DiscountRemarks });
+
+            _context.StudentBills.Add(bill);
+            app.Status = EnrollmentApplicationStatus.AccountingAssessment;
+            app.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.LogAsync("AssessmentGenerated", "EnrollmentApplication", app.Id.ToString(), $"Generated financial assessment bill {billNumber} for applicant {app.FirstName} {app.LastName} (Total: ₱{bill.TotalAmount:N2}).");
+
+            return MapToBillResponse(bill);
+        }
+        else
+        {
+            existingBill.SubTotal = request.TuitionFee + request.MiscellaneousFee + request.LaboratoryFee + request.BooksFee;
+            existingBill.DiscountAmount = request.VoucherAmount + request.DiscountAmount;
+            existingBill.DiscountRemarks = request.DiscountRemarks;
+            existingBill.TotalAmount = existingBill.SubTotal - existingBill.DiscountAmount;
+            existingBill.UpdatedAt = DateTime.UtcNow;
+
+            app.Status = EnrollmentApplicationStatus.AccountingAssessment;
+            app.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.LogAsync("AssessmentEdited", "StudentBill", existingBill.Id.ToString(), $"Edited assessment bill {existingBill.BillNumber} for applicant {app.FirstName} {app.LastName}.");
+
+            return MapToBillResponse(existingBill);
+        }
+    }
+
+    public async Task<StudentLedgerResponse> GetApplicationFinancialAccountAsync(int applicationId)
+    {
+        var app = await _context.EnrollmentApplications.FindAsync(applicationId)
+            ?? throw new InvalidOperationException("Application not found.");
+
+        var bill = await _context.StudentBills
+            .Include(b => b.BillItems)
+            .Include(b => b.Payments)
+                .ThenInclude(p => p.OfficialReceipt)
+            .FirstOrDefaultAsync(b => b.EnrollmentApplicationId == applicationId);
+
+        var transactions = new List<LedgerTransactionDto>();
+        decimal runningBalance = 0;
+
+        if (bill != null)
+        {
+            runningBalance += bill.TotalAmount;
+            transactions.Add(new LedgerTransactionDto
+            {
+                Date = bill.CreatedAt,
+                ReferenceNo = bill.BillNumber,
+                Type = "Debit",
+                Description = "Assessment Bill",
+                Debit = bill.TotalAmount,
+                Credit = 0,
+                RunningBalance = runningBalance
+            });
+
+            foreach (var p in bill.Payments.OrderBy(p => p.PaymentDate))
+            {
+                runningBalance -= p.Amount;
+                transactions.Add(new LedgerTransactionDto
+                {
+                    Date = p.PaymentDate,
+                    ReferenceNo = p.OfficialReceipt?.ReceiptNumber ?? p.PaymentNumber,
+                    Type = "Credit",
+                    Description = $"Payment via {p.PaymentMethod} {(string.IsNullOrEmpty(p.ReferenceNumber) ? "" : $"Ref: {p.ReferenceNumber}")}",
+                    Debit = 0,
+                    Credit = p.Amount,
+                    RunningBalance = runningBalance
+                });
+            }
+        }
+
+        return new StudentLedgerResponse
+        {
+            StudentId = 0,
+            StudentNumber = app.ApplicationNumber,
+            FullName = $"{app.FirstName} {app.LastName} (Applicant)",
+            GradeLevelName = app.GradeApplyingFor,
+            TotalBilled = bill?.TotalAmount ?? 0,
+            TotalPaid = bill?.AmountPaid ?? 0,
+            CurrentBalance = bill?.Balance ?? 0,
+            Transactions = transactions
+        };
+    }
+
+    public async Task<PaymentResponse> AdjustPaymentAsync(PaymentAdjustmentRequest request)
+    {
+        var payment = await _context.Payments
+            .Include(p => p.StudentBill)
+            .Include(p => p.OfficialReceipt)
+            .FirstOrDefaultAsync(p => p.Id == request.PaymentId)
+            ?? throw new InvalidOperationException("Payment record not found.");
+
+        var oldAmount = payment.Amount;
+        var diff = request.NewAmount - oldAmount;
+
+        payment.Amount = request.NewAmount;
+        payment.Remarks = $"Adjusted from {oldAmount:N2} to {request.NewAmount:N2}. Reason: {request.Reason}";
+        payment.UpdatedAt = DateTime.UtcNow;
+
+        if (payment.StudentBill != null)
+        {
+            payment.StudentBill.AmountPaid += diff;
+            if (payment.StudentBill.Balance <= 0)
+                payment.StudentBill.Status = BillStatus.Paid;
+            else
+                payment.StudentBill.Status = BillStatus.PartiallyPaid;
+        }
+
+        await _context.SaveChangesAsync();
+
+        await _auditLogService.LogAsync("PaymentAdjusted", "Payment", payment.Id.ToString(), $"Adjusted payment #{payment.PaymentNumber} from ₱{oldAmount:N2} to ₱{request.NewAmount:N2}. Reason: {request.Reason}");
+
+        return MapToPaymentResponse(payment);
+    }
+
+    #endregion
+
     #region Payment Processing & Receipts
 
     public async Task<PaymentResponse> ProcessPaymentAsync(ProcessPaymentRequest request)
     {
+        // Validate payment amount before any DB access
+        if (request.Amount <= 0)
+            throw new InvalidOperationException("Payment amount must be greater than zero.");
+
         var bill = await _context.StudentBills
             .Include(b => b.Enrollment)
-                .ThenInclude(e => e.Student)
+                .ThenInclude(e => e!.Student)
+            .Include(b => b.EnrollmentApplication)
             .FirstOrDefaultAsync(b => b.Id == request.StudentBillId)
             ?? throw new InvalidOperationException("Student bill not found.");
 
@@ -239,8 +503,10 @@ public class AccountingService : IAccountingService
 
         try
         {
-            var paymentCount = await _context.Payments.CountAsync() + 1;
-            var paymentNumber = $"{payPrefix}{DateTime.UtcNow.Year}-{paymentCount:D6}";
+            // Use MAX(Id) after insert for receipt number to leverage PostgreSQL's unique auto-increment PK.
+            // COUNT()+1 is unsafe under concurrency — two simultaneous requests can read the same count.
+            var payMaxId = await _context.Payments.MaxAsync(p => (int?)p.Id) ?? 0;
+            var paymentNumber = $"{payPrefix}{DateTime.UtcNow.Year}-{(payMaxId + 1):D6}";
 
             var payment = new Payment
             {
@@ -258,18 +524,24 @@ public class AccountingService : IAccountingService
             };
 
             _context.Payments.Add(payment);
-            await _context.SaveChangesAsync(); // Flush for payment.Id
+            await _context.SaveChangesAsync();
 
-            // Generate Official Receipt
-            var receiptCount = await _context.OfficialReceipts.CountAsync() + 1;
-            var receiptNumber = $"{orPrefix}{DateTime.UtcNow.Year}-{receiptCount:D6}";
+            // Use the actual inserted Payment.Id (PK) as the receipt sequence basis.
+            // After SaveChangesAsync, payment.Id is guaranteed unique by PostgreSQL sequence.
+            var receiptNumber = $"{orPrefix}{DateTime.UtcNow.Year}-{payment.Id:D6}";
+
+            var payerName = bill.Enrollment?.Student != null
+                ? $"{bill.Enrollment.Student.FirstName} {bill.Enrollment.Student.LastName}"
+                : bill.EnrollmentApplication != null
+                    ? $"{bill.EnrollmentApplication.FirstName} {bill.EnrollmentApplication.LastName}"
+                    : "Applicant";
 
             var receipt = new OfficialReceipt
             {
                 PaymentId = payment.Id,
                 ReceiptNumber = receiptNumber,
                 TotalAmountPaid = request.Amount,
-                PayerName = $"{bill.Enrollment.Student.FirstName} {bill.Enrollment.Student.LastName}",
+                PayerName = payerName,
                 IssuedAt = DateTime.UtcNow,
                 IssuedByEmployeeId = request.ProcessedByEmployeeId,
                 CreatedAt = DateTime.UtcNow
@@ -280,29 +552,64 @@ public class AccountingService : IAccountingService
             // Update Bill Balances & Status
             bill.AmountPaid += request.Amount;
             if (bill.Balance <= 0)
+            {
                 bill.Status = BillStatus.Paid;
+                bill.FinancialClearanceStatus = "Cleared";
+            }
             else
+            {
                 bill.Status = BillStatus.PartiallyPaid;
+                bill.FinancialClearanceStatus = "InstallmentApproved";
+            }
+
+            // If this is an application bill, update application status to PaymentConfirmed & notify Registrar
+            if (bill.EnrollmentApplication != null)
+            {
+                bill.EnrollmentApplication.Status = EnrollmentApplicationStatus.PaymentConfirmed;
+                bill.EnrollmentApplication.UpdatedAt = DateTime.UtcNow;
+
+                await _notificationService.CreateAsync(new CreateNotificationRequest
+                {
+                    TargetRole = "Registrar",
+                    Title = "Payment Complete - Ready for Section Assignment",
+                    Message = $"Payment complete for applicant {bill.EnrollmentApplication.FirstName} {bill.EnrollmentApplication.LastName} ({bill.EnrollmentApplication.ApplicationNumber}). Ready for section assignment.",
+                    Type = "Info"
+                });
+            }
 
             bill.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            // Queue Payment Receipt Email
-            await _emailService.QueueEmailAsync(
-                bill.Enrollment.Student.Email,
-                $"Noah's Academy - Official Receipt #{receiptNumber}",
-                "PaymentReceipt",
-                new PaymentReceiptEmailViewModel
-                {
-                    PayerName = receipt.PayerName,
-                    StudentName = $"{bill.Enrollment.Student.FirstName} {bill.Enrollment.Student.LastName}",
-                    ReceiptNumber = receiptNumber,
-                    AmountPaid = request.Amount,
-                    RemainingBalance = bill.Balance,
-                    PaymentDate = payment.PaymentDate
-                });
+            if (bill.Enrollment?.Student?.UserId != null)
+            {
+                await _notificationService.NotifyUserAsync(
+                    bill.Enrollment.Student.UserId.Value,
+                    "Payment Received",
+                    $"We received your payment of {request.Amount:N2} for bill {bill.BillNumber}. Receipt #{receiptNumber}.",
+                    "Success");
+            }
+
+            await _auditLogService.LogAsync("Payment.Process", "Payment", payment.Id.ToString(), $"Processed payment of {request.Amount:N2} for bill {bill.BillNumber} (Receipt #{receiptNumber}).");
+
+            var studentEmail = bill.Enrollment?.Student?.Email ?? bill.EnrollmentApplication?.Email;
+            if (!string.IsNullOrEmpty(studentEmail))
+            {
+                await _emailService.QueueEmailAsync(
+                    studentEmail,
+                    $"Noah's Academy - Official Receipt #{receiptNumber}",
+                    "PaymentReceipt",
+                    new PaymentReceiptEmailViewModel
+                    {
+                        PayerName = receipt.PayerName,
+                        StudentName = payerName,
+                        ReceiptNumber = receiptNumber,
+                        AmountPaid = request.Amount,
+                        RemainingBalance = bill.Balance,
+                        PaymentDate = payment.PaymentDate
+                    });
+            }
 
             return await GetPaymentByIdAsync(payment.Id)
                 ?? throw new InvalidOperationException("Failed to load processed payment details.");
@@ -334,7 +641,7 @@ public class AccountingService : IAccountingService
             .Include(p => p.ProcessedBy)
             .Include(p => p.OfficialReceipt)
                 .ThenInclude(r => r!.IssuedBy)
-            .Where(p => p.StudentBill.Enrollment.StudentId == studentId)
+            .Where(p => p.StudentBill.EnrollmentId != null && p.StudentBill.Enrollment!.StudentId == studentId)
             .OrderByDescending(p => p.PaymentDate)
             .ToListAsync();
 
@@ -357,7 +664,7 @@ public class AccountingService : IAccountingService
             .Include(r => r.Payment)
                 .ThenInclude(p => p.StudentBill)
                     .ThenInclude(b => b.Enrollment)
-            .Where(r => r.Payment.StudentBill.Enrollment.StudentId == studentId)
+            .Where(r => r.Payment.StudentBill.EnrollmentId != null && r.Payment.StudentBill.Enrollment!.StudentId == studentId)
             .OrderByDescending(r => r.IssuedAt)
             .ToListAsync();
 
@@ -373,7 +680,7 @@ public class AccountingService : IAccountingService
         var student = await _context.Students
             .Include(s => s.Enrollments)
                 .ThenInclude(e => e.Section)
-                    .ThenInclude(sec => sec.ProgramOffering)
+                    .ThenInclude(sec => sec!.ProgramOffering)
                         .ThenInclude(po => po.GradeLevel)
             .FirstOrDefaultAsync(s => s.Id == studentId)
             ?? throw new InvalidOperationException("Student not found.");
@@ -385,7 +692,7 @@ public class AccountingService : IAccountingService
             StudentId = student.Id,
             StudentNumber = student.StudentNumber,
             FullName = $"{student.FirstName} {student.LastName}",
-            GradeLevelName = student.Enrollments.LastOrDefault()?.Section.ProgramOffering.GradeLevel.Name ?? "N/A",
+            GradeLevelName = student.Enrollments.LastOrDefault()?.Section?.ProgramOffering?.GradeLevel?.Name ?? "N/A",
             TotalBilled = bills.Sum(b => b.TotalAmount),
             TotalPaid = bills.Sum(b => b.AmountPaid),
             CurrentBalance = bills.Sum(b => b.Balance)
@@ -445,14 +752,14 @@ public class AccountingService : IAccountingService
             .SumAsync(b => b.TotalAmount - b.AmountPaid);
 
         var paidStudentsCount = await _context.StudentBills
-            .Where(b => b.Status == BillStatus.Paid)
-            .Select(b => b.Enrollment.StudentId)
+            .Where(b => b.Status == BillStatus.Paid && b.EnrollmentId != null)
+            .Select(b => b.Enrollment!.StudentId)
             .Distinct()
             .CountAsync();
 
         var unpaidStudentsCount = await _context.StudentBills
-            .Where(b => b.Status == BillStatus.Pending || b.Status == BillStatus.PartiallyPaid)
-            .Select(b => b.Enrollment.StudentId)
+            .Where(b => (b.Status == BillStatus.Pending || b.Status == BillStatus.PartiallyPaid) && b.EnrollmentId != null)
+            .Select(b => b.Enrollment!.StudentId)
             .Distinct()
             .CountAsync();
 
@@ -460,15 +767,17 @@ public class AccountingService : IAccountingService
             .Where(b => b.Status == BillStatus.Pending || b.Status == BillStatus.PartiallyPaid)
             .CountAsync();
 
-        var recentPayments = await _context.Payments
+        var recentPaymentsList = await _context.Payments
             .Include(p => p.StudentBill)
             .Include(p => p.ProcessedBy)
             .Include(p => p.OfficialReceipt)
                 .ThenInclude(r => r!.IssuedBy)
             .OrderByDescending(p => p.PaymentDate)
             .Take(10)
-            .Select(p => MapToPaymentResponse(p))
             .ToListAsync();
+
+        var recentPayments = recentPaymentsList.Select(MapToPaymentResponse).ToList();
+
 
         return new AccountingDashboardResponse
         {
@@ -509,11 +818,13 @@ public class AccountingService : IAccountingService
         {
             Id = bill.Id,
             BillNumber = bill.BillNumber,
-            EnrollmentId = bill.EnrollmentId,
-            StudentNumber = bill.Enrollment?.Student?.StudentNumber ?? string.Empty,
+            EnrollmentId = bill.EnrollmentId ?? 0,
+            StudentNumber = bill.Enrollment?.Student?.StudentNumber ?? bill.EnrollmentApplication?.ApplicationNumber ?? string.Empty,
             StudentName = bill.Enrollment?.Student != null
                 ? $"{bill.Enrollment.Student.FirstName} {bill.Enrollment.Student.LastName}"
-                : string.Empty,
+                : bill.EnrollmentApplication != null
+                    ? $"{bill.EnrollmentApplication.FirstName} {bill.EnrollmentApplication.LastName} (Applicant)"
+                    : string.Empty,
             GradeLevelName = bill.Enrollment?.Section?.ProgramOffering?.GradeLevel?.Name ?? string.Empty,
             SubTotal = bill.SubTotal,
             DiscountAmount = bill.DiscountAmount,

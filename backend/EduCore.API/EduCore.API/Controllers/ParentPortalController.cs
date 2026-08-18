@@ -12,11 +12,13 @@ public class ParentPortalController : ControllerBase
 {
     private readonly IParentPortalService _service;
     private readonly IAccountingService _accountingService;
+    private readonly IAttendanceService _attendanceService;
 
-    public ParentPortalController(IParentPortalService service, IAccountingService accountingService)
+    public ParentPortalController(IParentPortalService service, IAccountingService accountingService, IAttendanceService attendanceService)
     {
         _service = service;
         _accountingService = accountingService;
+        _attendanceService = attendanceService;
     }
 
     private async Task<int> GetParentIdAsync()
@@ -197,6 +199,44 @@ public class ParentPortalController : ControllerBase
 
             var ledger = await _accountingService.GetStudentLedgerAsync(id);
             return Ok(ledger);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+    }
+
+    [HttpGet("Children/{id}/Attendance")]
+    public async Task<IActionResult> GetChildAttendance(int id)
+    {
+        try
+        {
+            var parentId = await GetParentIdAsync();
+            var child = await _service.GetChildDetailsAsync(parentId, id);
+            if (child == null)
+                return NotFound("Child not found or permission denied.");
+
+            var attendance = await _attendanceService.GetByStudentIdAsync(id);
+            return Ok(attendance);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+    }
+
+    [HttpGet("Children/{id}/Attendance/Summary")]
+    public async Task<IActionResult> GetChildAttendanceSummary(int id)
+    {
+        try
+        {
+            var parentId = await GetParentIdAsync();
+            var child = await _service.GetChildDetailsAsync(parentId, id);
+            if (child == null)
+                return NotFound("Child not found or permission denied.");
+
+            var summary = await _attendanceService.GetSummaryByStudentIdAsync(id);
+            return Ok(summary);
         }
         catch (UnauthorizedAccessException ex)
         {

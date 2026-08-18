@@ -152,17 +152,17 @@ export const SubjectManagementPage: React.FC = () => {
               !isError &&
               filtered.map((s) => (
                 <tr key={s.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
-                  <td className="px-6 py-4 font-mono text-xs font-bold text-blue-600 dark:text-blue-400">{s.subjectCode}</td>
+                  <td className="px-6 py-4 font-mono text-xs font-bold text-purple-700 dark:text-purple-400">{s.subjectCode}</td>
                   <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{s.subjectName}</td>
                   <td className="px-6 py-4 text-xs font-bold text-slate-500">{s.units} Units</td>
-                  <td className="px-6 py-4 text-xs font-semibold text-purple-600 dark:text-purple-400">{s.gradeLevel}</td>
+                  <td className="px-6 py-4 text-xs font-semibold text-purple-700 dark:text-purple-400">{s.gradeLevel}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full ${s.isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
                       {s.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right space-x-1">
-                    <button onClick={() => openEdit(s)} title="Edit" aria-label={`Edit ${s.subjectName}`} className="p-1.5 text-slate-400 hover:text-blue-500 rounded-md">
+                    <button onClick={() => openEdit(s)} title="Edit" aria-label={`Edit ${s.subjectName}`} className="p-1.5 text-slate-400 hover:text-purple-700 rounded-md">
                       <Edit className="w-4 h-4" />
                     </button>
                     <button onClick={() => setConfirmDeleteId(s.id)} title="Delete" aria-label={`Delete ${s.subjectName}`} className="p-1.5 text-slate-400 hover:text-rose-500 rounded-md">
@@ -237,12 +237,12 @@ export const SubjectManagementPage: React.FC = () => {
                 </div>
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.isCoreSubject} onChange={(e) => setForm({ ...form, isCoreSubject: e.target.checked })} className="w-4 h-4 text-blue-600 rounded" />
+                <input type="checkbox" checked={form.isCoreSubject} onChange={(e) => setForm({ ...form, isCoreSubject: e.target.checked })} className="w-4 h-4 text-purple-600 rounded" />
                 <span>Core Subject</span>
               </label>
               {editingSubject && (
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={form.isActive ?? true} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="w-4 h-4 text-blue-600 rounded" />
+                  <input type="checkbox" checked={form.isActive ?? true} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="w-4 h-4 text-purple-600 rounded" />
                   <span>Active</span>
                 </label>
               )}

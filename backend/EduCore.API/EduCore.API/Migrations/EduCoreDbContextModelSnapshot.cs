@@ -54,44 +54,72 @@ namespace EduCore.API.Migrations
                         new
                         {
                             Id = 1,
-                            Code = "STEM",
+                            Code = "ASSH",
                             IsActive = true,
-                            Name = "Science, Technology, Engineering, and Mathematics"
+                            Name = "Arts, Social Sciences and Humanities"
                         },
                         new
                         {
                             Id = 2,
-                            Code = "ABM",
+                            Code = "BE",
                             IsActive = true,
-                            Name = "Accountancy, Business, and Management"
+                            Name = "Business Entrepreneurship"
                         },
                         new
                         {
                             Id = 3,
-                            Code = "HUMSS",
+                            Code = "ICT-SUPP",
                             IsActive = true,
-                            Name = "Humanities and Social Sciences"
+                            Name = "ICT Support"
                         },
                         new
                         {
                             Id = 4,
-                            Code = "GAS",
+                            Code = "HT",
                             IsActive = true,
-                            Name = "General Academic Strand"
+                            Name = "Hospitality and Tourism"
                         },
                         new
                         {
                             Id = 5,
-                            Code = "ICT",
+                            Code = "ABM",
                             IsActive = true,
-                            Name = "Information and Communications Technology"
+                            Name = "Accountancy, Business and Management (ABM)"
                         },
                         new
                         {
                             Id = 6,
+                            Code = "HUMSS201",
+                            IsActive = true,
+                            Name = "HUMSS 201"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Code = "GAS",
+                            IsActive = true,
+                            Name = "General Academic Strand (GAS)"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Code = "AD",
+                            IsActive = true,
+                            Name = "Arts & Design (AD)"
+                        },
+                        new
+                        {
+                            Id = 9,
                             Code = "HE",
                             IsActive = true,
-                            Name = "Home Economics"
+                            Name = "Home Economics (HE)"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Code = "ICT",
+                            IsActive = true,
+                            Name = "Information and Communications Technology (ICT)"
                         });
                 });
 
@@ -103,11 +131,37 @@ namespace EduCore.API.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("ClassesEndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ClassesStartDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CurrentSemester")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EnrollmentEndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EnrollmentStartDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("GraduationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsEnrollmentOpen")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsReturningEnrollmentOpen")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("SchoolYear")
                         .IsRequired()
@@ -130,6 +184,367 @@ namespace EduCore.API.Migrations
                         .IsUnique();
 
                     b.ToTable("AcademicYears");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.AdmissionDocumentType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicableEducationLevel")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AdmissionDocumentTypes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ApplicableEducationLevel = "All",
+                            DisplayOrder = 1,
+                            IsActive = true,
+                            IsRequired = true,
+                            Name = "PSA Authenticated Birth Certificate"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ApplicableEducationLevel = "All",
+                            DisplayOrder = 2,
+                            IsActive = true,
+                            IsRequired = true,
+                            Name = "Official Report Card (Form 138 / SF9)"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ApplicableEducationLevel = "All",
+                            DisplayOrder = 3,
+                            IsActive = true,
+                            IsRequired = true,
+                            Name = "Transcript of Records (Form 137 / SF10)"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            ApplicableEducationLevel = "All",
+                            DisplayOrder = 4,
+                            IsActive = true,
+                            IsRequired = true,
+                            Name = "Certificate of Good Moral Character"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            ApplicableEducationLevel = "All",
+                            DisplayOrder = 5,
+                            IsActive = true,
+                            IsRequired = true,
+                            Name = "Recent 2×2 ID Pictures (4 Copies, White BG)"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            ApplicableEducationLevel = "SeniorHighSchool",
+                            DisplayOrder = 6,
+                            IsActive = true,
+                            IsRequired = true,
+                            Name = "JHS Certificate of Completion"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            ApplicableEducationLevel = "SeniorHighSchool",
+                            DisplayOrder = 7,
+                            IsActive = true,
+                            IsRequired = false,
+                            Name = "ESC / QVR Voucher Certificate (if applicable)"
+                        });
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.Announcement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("CreatedByEmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TargetRoles")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByEmployeeId");
+
+                    b.ToTable("Announcements");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.ApplicationStatusHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ChangedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EnrollmentApplicationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FromStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedByUserId");
+
+                    b.HasIndex("EnrollmentApplicationId");
+
+                    b.ToTable("ApplicationStatusHistories");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.Attendance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("RecordedByEmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TeachingAssignmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecordedByEmployeeId");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("TeachingAssignmentId");
+
+                    b.ToTable("Attendances");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Details")
+                        .HasColumnType("text");
+
+                    b.Property<string>("EntityId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("EntityType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserEmail")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AuditLogs");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.ClassSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("interval");
+
+                    b.Property<string>("Room")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("interval");
+
+                    b.Property<int>("TeachingAssignmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeachingAssignmentId");
+
+                    b.ToTable("ClassSchedules");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.DocumentSubmissionAppointment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AppointmentDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("AppointmentTime")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("AssignedRegistrarId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EnrollmentApplicationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<int?>("ScheduledByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedRegistrarId");
+
+                    b.HasIndex("EnrollmentApplicationId");
+
+                    b.HasIndex("ScheduledByUserId");
+
+                    b.ToTable("DocumentSubmissionAppointments");
                 });
 
             modelBuilder.Entity("EduCore.API.Models.EmailLog", b =>
@@ -289,11 +704,17 @@ namespace EduCore.API.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AcademicYearId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("ApprovedByEmployeeId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("EnrollmentApplicationId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("EnrollmentDate")
                         .HasColumnType("timestamp with time zone");
@@ -307,17 +728,20 @@ namespace EduCore.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("GradeLevelId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Remarks")
                         .HasColumnType("text");
 
-                    b.Property<int>("SectionId")
+                    b.Property<int?>("SectionId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("StudentId")
+                    b.Property<int?>("StudentId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -325,10 +749,16 @@ namespace EduCore.API.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AcademicYearId");
+
                     b.HasIndex("ApprovedByEmployeeId");
+
+                    b.HasIndex("EnrollmentApplicationId");
 
                     b.HasIndex("EnrollmentNumber")
                         .IsUnique();
+
+                    b.HasIndex("GradeLevelId");
 
                     b.HasIndex("SectionId");
 
@@ -347,6 +777,9 @@ namespace EduCore.API.Migrations
 
                     b.Property<string>("Address")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ApplicantRemarks")
                         .HasColumnType("text");
 
                     b.Property<string>("ApplicationNumber")
@@ -389,6 +822,12 @@ namespace EduCore.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("HasRegistrarVerificationSlip")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("InternalNotes")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsApproved")
                         .HasColumnType("boolean");
 
@@ -402,6 +841,9 @@ namespace EduCore.API.Migrations
 
                     b.Property<string>("ParentContact")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ParentEmail")
                         .HasColumnType("text");
 
                     b.Property<string>("ParentName")
@@ -431,12 +873,32 @@ namespace EduCore.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Strand")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("StudentId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Suffix")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Track")
+                        .HasColumnType("text");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("VerificationSlipGeneratedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VerificationSlipNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("VerificationSlipQrCode")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.HasKey("Id");
 
@@ -445,7 +907,169 @@ namespace EduCore.API.Migrations
 
                     b.HasIndex("Email");
 
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("VerificationSlipNumber")
+                        .IsUnique();
+
                     b.ToTable("EnrollmentApplications");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.EnrollmentApplicationDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AdmissionDocumentTypeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("DigitalStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("DocumentName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<int>("EnrollmentApplicationId")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OriginalFilename")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("OriginalRemarks")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<string>("OriginalStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime?>("OriginalSubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("OriginalVerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("OriginalVerifiedByEmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ParentDocumentId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("StoragePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("StoredFilename")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("UploadedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("VerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("VerifiedByEmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdmissionDocumentTypeId");
+
+                    b.HasIndex("EnrollmentApplicationId");
+
+                    b.HasIndex("OriginalVerifiedByEmployeeId");
+
+                    b.HasIndex("ParentDocumentId");
+
+                    b.HasIndex("UploadedByUserId");
+
+                    b.HasIndex("VerifiedByEmployeeId");
+
+                    b.ToTable("EnrollmentApplicationDocuments");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.EnrollmentHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AcademicYearId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("EnrolledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("EnrolledByEmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EnrollmentStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("GradeLevelId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SectionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SnapshotJson")
+                        .HasColumnType("text");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AcademicYearId");
+
+                    b.HasIndex("EnrolledByEmployeeId");
+
+                    b.HasIndex("GradeLevelId");
+
+                    b.HasIndex("SectionId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("EnrollmentHistories");
                 });
 
             modelBuilder.Entity("EduCore.API.Models.Grade", b =>
@@ -455,6 +1079,12 @@ namespace EduCore.API.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ApprovedByEmployeeId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -481,8 +1111,18 @@ namespace EduCore.API.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("ReviewerRemarks")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
                     b.Property<int>("SubjectId")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("TeachingAssignmentId")
                         .HasColumnType("integer");
@@ -491,6 +1131,8 @@ namespace EduCore.API.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApprovedByEmployeeId");
 
                     b.HasIndex("EnrollmentId");
 
@@ -630,6 +1272,46 @@ namespace EduCore.API.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EduCore.API.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("EduCore.API.Models.OfficialReceipt", b =>
                 {
                     b.Property<int>("Id")
@@ -748,6 +1430,41 @@ namespace EduCore.API.Migrations
                         .IsUnique();
 
                     b.ToTable("Parents");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.PasswordResetCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Used")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PasswordResetCodes");
                 });
 
             modelBuilder.Entity("EduCore.API.Models.Payment", b =>
@@ -956,6 +1673,9 @@ namespace EduCore.API.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<int>("StudentNumberCounterLength")
+                        .HasColumnType("integer");
+
                     b.Property<string>("StudentNumberPrefix")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -982,7 +1702,8 @@ namespace EduCore.API.Migrations
                             Currency = "PHP",
                             OfficialReceiptPrefix = "OR-",
                             PaymentNumberPrefix = "PAY-",
-                            SchoolName = "Noah's Academy Integrated Management System",
+                            SchoolName = "Noah's Academy Student Information System",
+                            StudentNumberCounterLength = 6,
                             StudentNumberPrefix = "STU-"
                         });
                 });
@@ -1168,8 +1889,16 @@ namespace EduCore.API.Migrations
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("EnrollmentId")
+                    b.Property<int?>("EnrollmentApplicationId")
                         .HasColumnType("integer");
+
+                    b.Property<int?>("EnrollmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FinancialClearanceStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -1193,6 +1922,8 @@ namespace EduCore.API.Migrations
                         .IsUnique();
 
                     b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("EnrollmentApplicationId");
 
                     b.HasIndex("EnrollmentId");
 
@@ -1319,6 +2050,17 @@ namespace EduCore.API.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("CurriculumVersion")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("MATATAG-K10");
+
+                    b.Property<string>("DomainCategory")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<int>("GradeLevelId")
                         .HasColumnType("integer");
 
@@ -1327,6 +2069,12 @@ namespace EduCore.API.Migrations
 
                     b.Property<bool>("IsCoreSubject")
                         .HasColumnType("boolean");
+
+                    b.Property<int?>("ProgramId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Semester")
+                        .HasColumnType("integer");
 
                     b.Property<string>("SubjectCode")
                         .IsRequired()
@@ -1338,12 +2086,21 @@ namespace EduCore.API.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<string>("SubjectType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("Core");
+
                     b.Property<int>("Units")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("GradeLevelId");
+
+                    b.HasIndex("ProgramId");
 
                     b.HasIndex("SubjectCode")
                         .IsUnique();
@@ -1458,6 +2215,100 @@ namespace EduCore.API.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("EduCore.API.Models.Announcement", b =>
+                {
+                    b.HasOne("EduCore.API.Models.Employee", "CreatedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("CreatedByEmployeeId");
+
+                    b.Navigation("CreatedByEmployee");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.ApplicationStatusHistory", b =>
+                {
+                    b.HasOne("User", "ChangedByUser")
+                        .WithMany()
+                        .HasForeignKey("ChangedByUserId");
+
+                    b.HasOne("EduCore.API.Models.EnrollmentApplication", "EnrollmentApplication")
+                        .WithMany("StatusHistories")
+                        .HasForeignKey("EnrollmentApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChangedByUser");
+
+                    b.Navigation("EnrollmentApplication");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.Attendance", b =>
+                {
+                    b.HasOne("EduCore.API.Models.Employee", "RecordedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("RecordedByEmployeeId");
+
+                    b.HasOne("EduCore.API.Models.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EduCore.API.Models.TeachingAssignment", "TeachingAssignment")
+                        .WithMany()
+                        .HasForeignKey("TeachingAssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RecordedByEmployee");
+
+                    b.Navigation("Student");
+
+                    b.Navigation("TeachingAssignment");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.AuditLog", b =>
+                {
+                    b.HasOne("User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.ClassSchedule", b =>
+                {
+                    b.HasOne("EduCore.API.Models.TeachingAssignment", "TeachingAssignment")
+                        .WithMany()
+                        .HasForeignKey("TeachingAssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TeachingAssignment");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.DocumentSubmissionAppointment", b =>
+                {
+                    b.HasOne("EduCore.API.Models.Employee", "AssignedRegistrar")
+                        .WithMany()
+                        .HasForeignKey("AssignedRegistrarId");
+
+                    b.HasOne("EduCore.API.Models.EnrollmentApplication", "EnrollmentApplication")
+                        .WithMany("Appointments")
+                        .HasForeignKey("EnrollmentApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("User", "ScheduledByUser")
+                        .WithMany()
+                        .HasForeignKey("ScheduledByUserId");
+
+                    b.Navigation("AssignedRegistrar");
+
+                    b.Navigation("EnrollmentApplication");
+
+                    b.Navigation("ScheduledByUser");
+                });
+
             modelBuilder.Entity("EduCore.API.Models.Employee", b =>
                 {
                     b.HasOne("User", "User")
@@ -1470,24 +2321,131 @@ namespace EduCore.API.Migrations
 
             modelBuilder.Entity("EduCore.API.Models.Enrollment", b =>
                 {
+                    b.HasOne("EduCore.API.Models.AcademicYear", "AcademicYear")
+                        .WithMany()
+                        .HasForeignKey("AcademicYearId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EduCore.API.Models.Employee", "ApprovedBy")
                         .WithMany()
                         .HasForeignKey("ApprovedByEmployeeId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("EduCore.API.Models.EnrollmentApplication", "EnrollmentApplication")
+                        .WithMany()
+                        .HasForeignKey("EnrollmentApplicationId");
+
+                    b.HasOne("EduCore.API.Models.GradeLevel", "GradeLevel")
+                        .WithMany()
+                        .HasForeignKey("GradeLevelId");
+
                     b.HasOne("EduCore.API.Models.Section", "Section")
                         .WithMany()
                         .HasForeignKey("SectionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("EduCore.API.Models.Student", "Student")
                         .WithMany("Enrollments")
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("AcademicYear");
 
                     b.Navigation("ApprovedBy");
+
+                    b.Navigation("EnrollmentApplication");
+
+                    b.Navigation("GradeLevel");
+
+                    b.Navigation("Section");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.EnrollmentApplication", b =>
+                {
+                    b.HasOne("EduCore.API.Models.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.EnrollmentApplicationDocument", b =>
+                {
+                    b.HasOne("EduCore.API.Models.AdmissionDocumentType", "AdmissionDocumentType")
+                        .WithMany()
+                        .HasForeignKey("AdmissionDocumentTypeId");
+
+                    b.HasOne("EduCore.API.Models.EnrollmentApplication", "EnrollmentApplication")
+                        .WithMany("Documents")
+                        .HasForeignKey("EnrollmentApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EduCore.API.Models.Employee", "OriginalVerifiedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("OriginalVerifiedByEmployeeId");
+
+                    b.HasOne("EduCore.API.Models.EnrollmentApplicationDocument", "ParentDocument")
+                        .WithMany()
+                        .HasForeignKey("ParentDocumentId");
+
+                    b.HasOne("User", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId");
+
+                    b.HasOne("EduCore.API.Models.Employee", "VerifiedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("VerifiedByEmployeeId");
+
+                    b.Navigation("AdmissionDocumentType");
+
+                    b.Navigation("EnrollmentApplication");
+
+                    b.Navigation("OriginalVerifiedByEmployee");
+
+                    b.Navigation("ParentDocument");
+
+                    b.Navigation("UploadedByUser");
+
+                    b.Navigation("VerifiedByEmployee");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.EnrollmentHistory", b =>
+                {
+                    b.HasOne("EduCore.API.Models.AcademicYear", "AcademicYear")
+                        .WithMany()
+                        .HasForeignKey("AcademicYearId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EduCore.API.Models.Employee", "EnrolledByEmployee")
+                        .WithMany()
+                        .HasForeignKey("EnrolledByEmployeeId");
+
+                    b.HasOne("EduCore.API.Models.GradeLevel", "GradeLevel")
+                        .WithMany()
+                        .HasForeignKey("GradeLevelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EduCore.API.Models.Section", "Section")
+                        .WithMany()
+                        .HasForeignKey("SectionId");
+
+                    b.HasOne("EduCore.API.Models.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AcademicYear");
+
+                    b.Navigation("EnrolledByEmployee");
+
+                    b.Navigation("GradeLevel");
 
                     b.Navigation("Section");
 
@@ -1496,6 +2454,10 @@ namespace EduCore.API.Migrations
 
             modelBuilder.Entity("EduCore.API.Models.Grade", b =>
                 {
+                    b.HasOne("EduCore.API.Models.Employee", "ApprovedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("ApprovedByEmployeeId");
+
                     b.HasOne("EduCore.API.Models.Enrollment", "Enrollment")
                         .WithMany("Grades")
                         .HasForeignKey("EnrollmentId")
@@ -1514,11 +2476,24 @@ namespace EduCore.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("ApprovedByEmployee");
+
                     b.Navigation("Enrollment");
 
                     b.Navigation("Subject");
 
                     b.Navigation("TeachingAssignment");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.Notification", b =>
+                {
+                    b.HasOne("User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("EduCore.API.Models.OfficialReceipt", b =>
@@ -1546,6 +2521,17 @@ namespace EduCore.API.Migrations
                         .WithOne("Parent")
                         .HasForeignKey("EduCore.API.Models.Parent", "UserId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.PasswordResetCode", b =>
+                {
+                    b.HasOne("User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -1672,15 +2658,20 @@ namespace EduCore.API.Migrations
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("EduCore.API.Models.EnrollmentApplication", "EnrollmentApplication")
+                        .WithMany()
+                        .HasForeignKey("EnrollmentApplicationId");
+
                     b.HasOne("EduCore.API.Models.Enrollment", "Enrollment")
                         .WithMany()
                         .HasForeignKey("EnrollmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("Enrollment");
+
+                    b.Navigation("EnrollmentApplication");
                 });
 
             modelBuilder.Entity("EduCore.API.Models.StudentBillItem", b =>
@@ -1750,7 +2741,14 @@ namespace EduCore.API.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("EduCore.API.Models.AcademicProgram", "Program")
+                        .WithMany()
+                        .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("GradeLevel");
+
+                    b.Navigation("Program");
                 });
 
             modelBuilder.Entity("EduCore.API.Models.TeachingAssignment", b =>
@@ -1808,6 +2806,15 @@ namespace EduCore.API.Migrations
             modelBuilder.Entity("EduCore.API.Models.Enrollment", b =>
                 {
                     b.Navigation("Grades");
+                });
+
+            modelBuilder.Entity("EduCore.API.Models.EnrollmentApplication", b =>
+                {
+                    b.Navigation("Appointments");
+
+                    b.Navigation("Documents");
+
+                    b.Navigation("StatusHistories");
                 });
 
             modelBuilder.Entity("EduCore.API.Models.GradeLevel", b =>

@@ -1,9 +1,19 @@
-﻿namespace EduCore.API.Enums;
+namespace EduCore.API.Enums;
 
 public enum EnrollmentApplicationStatus
 {
-    Pending,
-    Approved,
-    Rejected,
-    Cancelled
+    Submitted = 0,
+    Pending = 0,
+    UnderReview = 1,
+    DocumentsRequired = 2,
+    DocumentsSubmitted = 3,
+    DocumentsVerified = 4,
+    Approved = 5,
+    AccountingAssessment = 6,
+    PaymentConfirmed = 7,
+    SectionAssignment = 8,
+    Enrolled = 9,
+    Rejected = 10,
+    Cancelled = 11,
+    Withdrawn = 12
 }

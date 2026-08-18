@@ -1,8 +1,7 @@
 import React from 'react';
 import { AlertCircle } from 'lucide-react';
 
-// Omit native 'prefix' to avoid conflict with HTML attribute
-interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
+export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
   label?: string;
   error?: string;
   hint?: string;
@@ -47,18 +46,19 @@ export const Input: React.FC<InputProps> = ({
           aria-invalid={!!error}
           aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
           className={[
-            'w-full text-xs font-medium text-slate-900 dark:text-white',
-            'bg-white dark:bg-slate-950 border rounded-xl',
-            'placeholder:text-slate-400 dark:placeholder:text-slate-600',
-            'transition-colors duration-150',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0',
+            'w-full text-xs font-medium text-slate-900 dark:text-slate-100',
+            'bg-white dark:bg-slate-900 border rounded-xl',
+            'placeholder:text-slate-400 dark:placeholder:text-slate-500',
+            'transition-all duration-150',
+            'hover:border-purple-300 dark:hover:border-purple-500',
+            'focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 focus:ring-offset-0',
             'disabled:opacity-50 disabled:cursor-not-allowed',
             prefix ? 'pl-9' : 'pl-3.5',
             suffix ? 'pr-9' : 'pr-3.5',
             'py-2.5',
             error
               ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500'
-              : 'border-slate-200 dark:border-slate-800 focus:border-blue-500 dark:focus:border-blue-500',
+              : 'border-slate-200 dark:border-slate-700',
             className,
           ].join(' ')}
           {...props}

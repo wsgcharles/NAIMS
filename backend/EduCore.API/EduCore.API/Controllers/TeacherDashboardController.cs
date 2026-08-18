@@ -117,4 +117,21 @@ public class TeacherDashboardController : ControllerBase
                 : "Grades unpublished successfully."
         });
     }
+
+    [HttpPost("MyClasses/{teachingAssignmentId}/SubmitForApproval")]
+    public async Task<IActionResult> SubmitForApproval(int teachingAssignmentId)
+    {
+        var userIdClaim = User.FindFirst("UserId");
+        if (userIdClaim == null) return Unauthorized();
+
+        var userId = int.Parse(userIdClaim.Value);
+        var success = await _service.SubmitGradesForApprovalAsync(userId, teachingAssignmentId);
+
+        if (!success)
+        {
+            return BadRequest(new { message = "Unable to submit grades for approval. Ensure grades exist and are in Draft or Rejected status." });
+        }
+
+        return Ok(new { message = "Grades submitted to the Academic Head / Vice Principal for approval." });
+    }
 }

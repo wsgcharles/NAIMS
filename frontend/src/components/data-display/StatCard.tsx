@@ -19,7 +19,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   change,
   changeType = 'positive',
   icon: Icon,
-  iconBgColor = 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  iconBgColor = 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300',
 }) => {
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs hover:shadow-md transition-shadow">

@@ -18,7 +18,7 @@ public class SchoolSettingConfiguration : IEntityTypeConfiguration<SchoolSetting
         builder.HasData(new SchoolSetting
         {
             Id = 1,
-            SchoolName = "Noah's Academy Integrated Management System",
+            SchoolName = "Noah's Academy Student Information System",
             OfficialReceiptPrefix = "OR-",
             StudentNumberPrefix = "STU-",
             BillNumberPrefix = "BILL-",

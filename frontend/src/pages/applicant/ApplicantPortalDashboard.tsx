@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatCard } from '../../components/data-display/StatCard';
 import { StatusChip } from '../../components/data-display/StatusChip';
 import {
@@ -9,76 +9,56 @@ import {
   Clock,
   MessageSquare,
   User,
-  Upload,
   ShieldAlert,
   Send,
-  Sparkles,
+  Loader2,
+  AlertCircle,
+  FileCheck,
+  Printer,
 } from 'lucide-react';
-import { EnrollmentStatus } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
+import { admissionService, type TrackApplicationResponse } from '../../services/admissionService';
+import { verificationSlipPdfService } from '../../services/verificationSlipPdfService';
+import { receiptPdfService } from '../../services/receiptPdfService';
 import { toast } from 'sonner';
 
 export const ApplicantPortalDashboard: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'requirements' | 'messages' | 'profile'>('overview');
-
-  const applicantInfo = {
-    refNumber: 'NAI-2026-000154',
-    name: 'John Mark Doe',
-    email: 'johnmark.doe@example.com',
-    phone: '+1 555-0192',
-    grade: 'Grade 11 (STEM Track)',
-    submissionDate: 'July 22, 2026',
-    status: EnrollmentStatus.Verified,
-    interviewDate: 'August 03, 2026 — 10:00 AM (Room 204)',
-    previousSchool: 'Springfield Junior High School',
-    gpa: '94.5',
-    fatherName: 'Robert Doe',
-    motherName: 'Elena Reyes Doe',
-    emergencyPhone: '+1 555-0144',
-  };
-
-  const timelineSteps = [
-    { title: 'Draft Created', date: 'July 22, 2026', done: true, desc: 'Application draft initialized by applicant.' },
-    { title: 'Application Submitted', date: 'July 22, 2026', done: true, desc: 'Digital form and initial attachments submitted.' },
-    { title: 'Document Verification', date: 'July 22, 2026', done: true, desc: 'Registrar validated Form 138 & Birth Certificate.' },
-    { title: 'Guidance Interview', date: 'Aug 03, 2026 (Scheduled)', active: true, desc: 'Consultation with Senior High Guidance Counselor.' },
-    { title: 'Official Approval', date: 'Pending Interview', done: false, desc: 'Final sign-off by Admissions Committee.' },
-    { title: 'Convert to Student', date: 'Pending Approval', done: false, desc: 'Registrar issues Student ID & Section allocation.' },
-  ];
-
-  const documents = [
-    { name: 'PSA Birth Certificate', type: 'PDF Document', status: 'Verified', date: 'July 22, 2026' },
-    { name: 'Report Card (Form 138)', type: 'PDF Document', status: 'Verified', date: 'July 22, 2026' },
-    { name: 'Certificate of Good Moral Character', type: 'PDF Document', status: 'Verified', date: 'July 22, 2026' },
-    { name: 'Recent 2x2 ID Photo', type: 'PNG Image', status: 'Action Required', date: 'Pending Re-upload' },
-  ];
-
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'Registrar Admissions Office',
-      role: 'Registrar',
-      text: 'Your document verification has been completed. Please bring original physical copies of your Form 138 to your scheduled interview.',
-      date: 'July 22, 2026 — 2:15 PM',
-    },
-    {
-      id: 2,
-      sender: 'Guidance Office',
-      role: 'Counselor',
-      text: 'Reminder: Your Senior High STEM orientation interview is scheduled for August 3, 2026 at 10:00 AM in Room 204.',
-      date: 'July 23, 2026 — 9:00 AM',
-    },
-  ]);
-
+  const [loading, setLoading] = useState(true);
+  const [appData, setAppData] = useState<TrackApplicationResponse | null>(null);
   const [newMessage, setNewMessage] = useState('');
+  const [localMessages, setLocalMessages] = useState<Array<{ id: number; sender: string; role: string; text: string; date: string }>>([]);
+
+  useEffect(() => {
+    const fetchApplicantData = async () => {
+      if (!user?.email) {
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        // Search by user email
+        const res = await admissionService.trackApplication('', user.email);
+        setAppData(res);
+      } catch {
+        setAppData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplicantData();
+  }, [user]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
-    setMessages([
-      ...messages,
+    setLocalMessages((prev) => [
+      ...prev,
       {
         id: Date.now(),
-        sender: applicantInfo.name,
+        sender: appData?.fullName || user?.fullName || 'Applicant',
         role: 'Applicant',
         text: newMessage,
         date: 'Just now',
@@ -87,6 +67,76 @@ export const ApplicantPortalDashboard: React.FC = () => {
     setNewMessage('');
     toast.success('Message sent to Admissions Office.');
   };
+
+  const handlePrintSlip = async () => {
+    if (!appData) return;
+    try {
+      const slip = await admissionService.getVerificationSlip(appData.id);
+      if (slip) {
+        verificationSlipPdfService.printVerificationSlip(slip);
+      } else {
+        toast.error('Registrar Verification Slip has not been generated yet.');
+      }
+    } catch {
+      toast.error('Failed to load Registrar Verification Slip.');
+    }
+  };
+
+  const handleDownloadReceipt = () => {
+    if (!appData) return;
+    receiptPdfService.downloadConfirmationReceipt({
+      applicationNumber: appData.applicationNumber,
+      fullName: appData.fullName,
+      gradeApplyingFor: appData.gradeApplyingFor,
+      email: appData.email,
+      createdAt: appData.createdAt,
+      status: appData.status,
+      estimatedNextStep: appData.estimatedNextStep,
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-[600px] flex items-center justify-center p-8 bg-slate-950 text-slate-100">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+          <p className="text-xs font-semibold text-slate-400">Loading your admissions record...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!appData) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-8 max-w-4xl mx-auto font-sans flex items-center justify-center">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 sm:p-12 text-center space-y-6 max-w-lg shadow-2xl">
+          <div className="w-16 h-16 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-2xl flex items-center justify-center mx-auto">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-white">No Application Record Found</h2>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              We could not find an active admissions application associated with <strong className="text-purple-300">{user?.email}</strong>.
+            </p>
+          </div>
+          <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 text-xs text-slate-400 text-left space-y-1">
+            <p className="font-bold text-slate-200">Next Steps:</p>
+            <p>1. If you are a new student, please complete the Public Admissions Application Wizard.</p>
+            <p>2. If you already submitted an application, verify that your login email matches your application email.</p>
+          </div>
+          <a
+            href="/apply"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-purple-700 hover:bg-purple-600 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-purple-600/25 transition-all"
+          >
+            Go to Admission Application
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  const verifiedDocsCount = appData.documents.filter((d) => d.digitalStatus === 'Verified' || d.originalStatus === 'Verified').length;
+  const totalDocsCount = appData.documents.length;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-8 space-y-8 max-w-7xl mx-auto font-sans">
@@ -99,30 +149,41 @@ export const ApplicantPortalDashboard: React.FC = () => {
           </span>
         </div>
         <span className="font-mono font-bold px-2.5 py-1 bg-amber-500/20 rounded-md border border-amber-500/30 shrink-0">
-          Ref: {applicantInfo.refNumber}
+          Ref: {appData.applicationNumber}
         </span>
       </div>
 
       {/* Top Banner */}
-      <div className="relative bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 border border-slate-800 rounded-3xl p-6 sm:p-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-2xl overflow-hidden">
-        <div className="pointer-events-none absolute -right-10 -bottom-10 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl" />
+      <div className="relative bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 border border-slate-800 rounded-3xl p-6 sm:p-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-2xl overflow-hidden">
+        <div className="pointer-events-none absolute -right-10 -bottom-10 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl" />
         <div className="space-y-2 relative z-10">
           <div className="flex items-center gap-3">
-            <span className="px-3 py-1 bg-blue-500/15 text-blue-400 text-[11px] font-bold uppercase tracking-wider rounded-full border border-blue-500/30">
-              AY 2026–2027 Admissions
+            <span className="px-3 py-1 bg-purple-500/15 text-purple-300 text-[11px] font-bold uppercase tracking-wider rounded-full border border-purple-500/30">
+              {appData.currentStageTitle}
             </span>
-            <StatusChip status={applicantInfo.status} type="enrollment" />
+            <StatusChip status={appData.status as any} type="enrollment" />
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Welcome, {applicantInfo.name}!</h1>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">Welcome, {appData.fullName}!</h1>
           <p className="text-xs text-slate-400">
-            Applying for <strong className="text-white">{applicantInfo.grade}</strong> · Submitted on {applicantInfo.submissionDate}
+            Applying for <strong className="text-white">{appData.gradeApplyingFor}</strong> · Submitted on {new Date(appData.createdAt).toLocaleDateString()}
           </p>
         </div>
 
-        <div className="flex items-center gap-3 relative z-10 shrink-0">
+        <div className="flex flex-wrap items-center gap-3 relative z-10 shrink-0">
+          {appData.hasRegistrarVerificationSlip && (
+            <button
+              type="button"
+              onClick={handlePrintSlip}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/25 transition-all"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Verification Slip</span>
+            </button>
+          )}
           <button
-            onClick={() => toast.success('Downloading Official Application Summary PDF...')}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all"
+            type="button"
+            onClick={handleDownloadReceipt}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-700 hover:bg-purple-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-600/25 transition-all"
           >
             <Download className="w-4 h-4" />
             <span>Download Summary PDF</span>
@@ -146,7 +207,7 @@ export const ApplicantPortalDashboard: React.FC = () => {
               onClick={() => setActiveTab(tab.id as any)}
               className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 isActive
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                  ? 'bg-purple-700 text-white shadow-md shadow-purple-600/25'
                   : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700'
               }`}
             >
@@ -162,9 +223,14 @@ export const ApplicantPortalDashboard: React.FC = () => {
         <div className="space-y-8">
           {/* Key Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <StatCard title="Application Ref #" value={applicantInfo.refNumber} icon={FileText} />
-            <StatCard title="Document Status" value="3 Verified / 1 Action" icon={CheckCircle2} iconBgColor="bg-emerald-500/10 text-emerald-400" />
-            <StatCard title="Scheduled Interview" value="Aug 03, 2026" icon={Calendar} iconBgColor="bg-amber-500/10 text-amber-400" />
+            <StatCard title="Application Ref #" value={appData.applicationNumber} icon={FileText} />
+            <StatCard title="Document Progress" value={`${verifiedDocsCount} Verified / ${totalDocsCount} Total`} icon={CheckCircle2} iconBgColor="bg-emerald-500/10 text-emerald-400" />
+            <StatCard
+              title="In-Person Appointment"
+              value={appData.appointment ? `${new Date(appData.appointment.appointmentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (${appData.appointment.appointmentTime})` : 'Not Scheduled'}
+              icon={Calendar}
+              iconBgColor="bg-amber-500/10 text-amber-400"
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -173,66 +239,38 @@ export const ApplicantPortalDashboard: React.FC = () => {
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                 <div>
                   <h3 className="font-bold text-lg text-white">Admissions Workflow Progress</h3>
-                  <p className="text-xs text-slate-400">Step-by-step verification pipeline</p>
+                  <p className="text-xs text-slate-400">Next Action: {appData.estimatedNextStep}</p>
                 </div>
-                <span className="text-xs font-mono font-bold text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
-                  Step 4 of 6 Active
+                <span className="text-xs font-mono font-bold text-purple-300 bg-purple-500/15 px-3 py-1 rounded-full border border-purple-500/30">
+                  Stage {appData.stageIndex + 1} of 10
                 </span>
               </div>
 
-              <div className="space-y-8 relative pl-6 border-l-2 border-slate-800">
-                {timelineSteps.map((step, idx) => (
-                  <div key={idx} className="relative space-y-1 group">
-                    <div
-                      className={`absolute -left-[31px] top-0 w-4 h-4 rounded-full border-2 transition-all ${
-                        step.done
-                          ? 'bg-emerald-500 border-emerald-400 shadow-sm shadow-emerald-500/50'
-                          : step.active
-                          ? 'bg-blue-600 border-blue-400 ring-4 ring-blue-500/20'
-                          : 'bg-slate-950 border-slate-800'
-                      }`}
-                    />
+              {/* Status Log */}
+              <div className="space-y-6 relative pl-6 border-l-2 border-slate-800">
+                {appData.statusHistory.map((h, idx) => (
+                  <div key={idx} className="relative space-y-1">
+                    <div className="absolute -left-[31px] top-0.5 w-4 h-4 rounded-full border-2 bg-purple-600 border-purple-400 ring-4 ring-purple-500/20" />
                     <div className="flex items-center justify-between">
-                      <div className="text-sm font-bold text-white group-hover:text-blue-300 transition-colors">
-                        {step.title}
-                      </div>
-                      <span className="text-[11px] font-mono text-slate-400">{step.date}</span>
+                      <div className="text-sm font-bold text-white">{h.fromStatus} → <span className="text-purple-300">{h.toStatus}</span></div>
+                      <span className="text-[11px] font-mono text-slate-400">{new Date(h.timestamp).toLocaleString()}</span>
                     </div>
-                    <p className="text-xs text-slate-400 leading-relaxed">{step.desc}</p>
+                    <p className="text-xs text-slate-400">{h.remarks}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Right Side Widgets */}
+            {/* Quick Actions / Notices */}
             <div className="space-y-6">
-              {/* Scheduled Interview Card */}
               <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-4">
-                <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-                  <Calendar className="w-4 h-4" />
-                  <span>Guidance Interview Details</span>
-                </div>
-                <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 text-xs space-y-2">
-                  <div className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Date &amp; Venue</div>
-                  <div className="font-bold text-amber-300">{applicantInfo.interviewDate}</div>
-                  <p className="text-[11px] text-slate-400 pt-1 leading-relaxed">
-                    Please arrive 15 minutes prior. Bring physical original Form 138 &amp; PSA Birth Certificate for final verification.
-                  </p>
-                </div>
-              </div>
-
-              {/* Registrar Advisories */}
-              <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-4">
-                <div className="flex items-center gap-2 text-blue-400 font-bold text-sm">
-                  <Sparkles className="w-4 h-4" />
-                  <span>Admissions Advisory</span>
-                </div>
-                <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 text-xs space-y-2">
-                  <div className="font-semibold text-white">Enrollment Clearance</div>
-                  <p className="text-slate-400 leading-relaxed">
-                    Once interview evaluation is submitted, the Registrar Office will issue your tuition fee ledger and class section assignment.
-                  </p>
-                </div>
+                <h3 className="font-bold text-white text-base flex items-center gap-2">
+                  <FileCheck className="w-5 h-5 text-purple-400" />
+                  <span>Admissions Notice</span>
+                </h3>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {appData.applicantRemarks || 'Your application is under evaluation. Please keep your required documents ready for physical verification at the Registrar Office.'}
+                </p>
               </div>
             </div>
           </div>
@@ -241,109 +279,76 @@ export const ApplicantPortalDashboard: React.FC = () => {
 
       {/* TAB 2: REQUIREMENTS & DOCUMENTS */}
       {activeTab === 'requirements' && (
-        <div className="space-y-6">
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-              <div>
-                <h3 className="font-bold text-lg text-white">Digital Document Requirements</h3>
-                <p className="text-xs text-slate-400">Required credentials for official enrollment verification</p>
-              </div>
-              <button
-                onClick={() => toast.info('Select a document slot below to upload or replace file.')}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                <span>Upload New File</span>
-              </button>
+        <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div>
+              <h3 className="font-bold text-lg text-white">Dual Verification Checklist</h3>
+              <p className="text-xs text-slate-400">Digital Upload &amp; Physical Original Statuses</p>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {documents.map((doc, idx) => (
-                <div key={idx} className="p-5 bg-slate-950 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4 hover:border-slate-700 transition-colors">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-blue-500/10 text-blue-400 rounded-xl">
-                        <FileText className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-white text-sm">{doc.name}</h4>
-                        <span className="text-[11px] text-slate-400">{doc.type} · {doc.date}</span>
-                      </div>
-                    </div>
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
-                        doc.status === 'Verified'
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                      }`}
-                    >
-                      {doc.status}
-                    </span>
+          <div className="space-y-4">
+            {appData.documents.map((doc) => (
+              <div key={doc.id} className="p-4 bg-slate-950 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h4 className="font-bold text-sm text-white">{doc.documentName}</h4>
+                  <p className="text-[11px] text-slate-400">Filename: {doc.originalFilename || 'Not uploaded'}</p>
+                </div>
+
+                <div className="flex items-center gap-3 text-xs">
+                  <div className="px-3 py-1 bg-purple-950 border border-purple-800 text-purple-300 rounded-lg font-semibold">
+                    Digital: {doc.digitalStatus}
                   </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-900">
-                    <span className="text-[11px] text-slate-500">Max size 10MB (PDF/PNG)</span>
-                    <button
-                      onClick={() => toast.success(`Re-uploading ${doc.name}...`)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-lg border border-slate-800"
-                    >
-                      <Upload className="w-3 h-3" />
-                      <span>{doc.status === 'Verified' ? 'Replace' : 'Upload File'}</span>
-                    </button>
+                  <div className="px-3 py-1 bg-indigo-950 border border-indigo-800 text-indigo-300 rounded-lg font-semibold">
+                    Original: {doc.originalStatus}
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* TAB 3: ADMISSIONS DESK / MESSAGES */}
+      {/* TAB 3: ADMISSIONS DESK */}
       {activeTab === 'messages' && (
         <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
           <div className="border-b border-slate-800 pb-4">
-            <h3 className="font-bold text-lg text-white">Admissions Help Desk &amp; Messaging</h3>
-            <p className="text-xs text-slate-400">Direct channel with the Registrar and Guidance Officers</p>
+            <h3 className="font-bold text-lg text-white">Registrar Helpdesk</h3>
+            <p className="text-xs text-slate-400">Direct channel with Noah's Academy Admissions</p>
           </div>
 
           <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-            {messages.map((m) => (
-              <div
-                key={m.id}
-                className={`p-4 rounded-2xl border space-y-1.5 ${
-                  m.role === 'Applicant'
-                    ? 'bg-blue-950/40 border-blue-800/60 ml-8'
-                    : 'bg-slate-950 border-slate-800 mr-8'
-                }`}
-              >
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-white flex items-center gap-2">
-                    {m.sender}
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono">
-                      {m.role}
-                    </span>
-                  </span>
-                  <span className="text-[11px] text-slate-500">{m.date}</span>
-                </div>
-                <p className="text-xs text-slate-300 leading-relaxed">{m.text}</p>
+            {localMessages.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-500 bg-slate-950 rounded-2xl border border-slate-800">
+                No previous messages. Type a inquiry below to send to the Admissions Desk.
               </div>
-            ))}
+            ) : (
+              localMessages.map((msg) => (
+                <div key={msg.id} className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-purple-300">{msg.sender} ({msg.role})</span>
+                    <span className="text-[10px] text-slate-500">{msg.date}</span>
+                  </div>
+                  <p className="text-xs text-slate-300">{msg.text}</p>
+                </div>
+              ))
+            )}
           </div>
 
-          <form onSubmit={handleSendMessage} className="flex items-center gap-3 pt-4 border-t border-slate-800">
+          <form onSubmit={handleSendMessage} className="flex gap-3 pt-2">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type your inquiry or message for the Admissions Office..."
-              className="flex-1 px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-all"
+              placeholder="Type your message to the Admissions Office..."
+              className="flex-1 px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-600"
             />
             <button
               type="submit"
-              className="inline-flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-500/20 shrink-0"
+              className="inline-flex items-center gap-2 px-5 py-3 bg-purple-700 hover:bg-purple-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-600/25 shrink-0"
             >
               <Send className="w-4 h-4" />
-              <span>Send</span>
+              <span>Send Inquiry</span>
             </button>
           </form>
         </div>
@@ -355,52 +360,34 @@ export const ApplicantPortalDashboard: React.FC = () => {
           <div className="flex items-center justify-between border-b border-slate-800 pb-4">
             <div>
               <h3 className="font-bold text-lg text-white">Applicant Record</h3>
-              <p className="text-xs text-slate-400">Pre-enrollment profile details</p>
+              <p className="text-xs text-slate-400">Submitted profile details</p>
             </div>
-            <button
-              onClick={() => toast.info('Contact Registrar to request profile modifications.')}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700"
-            >
-              Request Changes
-            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-xs">
             <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
               <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Full Name</span>
-              <div className="font-bold text-white text-sm">{applicantInfo.name}</div>
+              <div className="font-bold text-white text-sm">{appData.fullName}</div>
             </div>
             <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
               <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Email Address</span>
-              <div className="font-bold text-white text-sm">{applicantInfo.email}</div>
+              <div className="font-bold text-white text-sm">{appData.email}</div>
             </div>
             <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Mobile Contact</span>
-              <div className="font-bold text-white text-sm">{applicantInfo.phone}</div>
+              <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Application Number</span>
+              <div className="font-bold text-purple-400 font-mono text-sm">{appData.applicationNumber}</div>
             </div>
             <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Desired Track</span>
-              <div className="font-bold text-blue-400 text-sm">{applicantInfo.grade}</div>
+              <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Grade Applying For</span>
+              <div className="font-bold text-blue-400 text-sm">{appData.gradeApplyingFor}</div>
             </div>
             <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Previous School</span>
-              <div className="font-bold text-white text-sm">{applicantInfo.previousSchool}</div>
+              <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Current Status</span>
+              <div className="font-bold text-emerald-400 text-sm">{appData.currentStageTitle}</div>
             </div>
             <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Junior High GPA</span>
-              <div className="font-bold text-emerald-400 text-sm">{applicantInfo.gpa}%</div>
-            </div>
-            <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Father's Name</span>
-              <div className="font-bold text-white text-sm">{applicantInfo.fatherName}</div>
-            </div>
-            <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Mother's Name</span>
-              <div className="font-bold text-white text-sm">{applicantInfo.motherName}</div>
-            </div>
-            <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Emergency Hotline</span>
-              <div className="font-bold text-white text-sm">{applicantInfo.emergencyPhone}</div>
+              <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Submission Date</span>
+              <div className="font-bold text-white text-sm">{new Date(appData.createdAt).toLocaleDateString()}</div>
             </div>
           </div>
         </div>

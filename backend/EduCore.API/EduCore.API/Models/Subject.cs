@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace EduCore.API.Models;
 
@@ -20,7 +20,29 @@ public class Subject
 
     public GradeLevel GradeLevel { get; set; } = null!;
 
+    /// <summary>
+    /// Nullable link to AcademicProgram (Strand).
+    /// Null = Common/Core subject for the applicable GradeLevel.
+    /// Non-null = Strand-specific subject for Senior High School (Grades 11-12).
+    /// </summary>
+    public int? ProgramId { get; set; }
+
+    public AcademicProgram? Program { get; set; }
+
     public bool IsCoreSubject { get; set; }
+
+    [Required]
+    [MaxLength(50)]
+    public string CurriculumVersion { get; set; } = "MATATAG-K10";
+
+    [Required]
+    [MaxLength(30)]
+    public string SubjectType { get; set; } = "Core";
+
+    public int? Semester { get; set; }
+
+    [MaxLength(50)]
+    public string? DomainCategory { get; set; }
 
     public bool IsActive { get; set; } = true;
 

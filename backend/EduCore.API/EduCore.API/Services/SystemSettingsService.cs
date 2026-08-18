@@ -25,9 +25,10 @@ public class SystemSettingsService : ISystemSettingsService
         {
             settings = new SchoolSetting
             {
-                SchoolName = "Noah's Academy Integrated Management System",
+                SchoolName = "Noah's Academy Student Information System",
                 OfficialReceiptPrefix = "OR-",
-                StudentNumberPrefix = "STU-",
+                StudentNumberPrefix = "NAI",
+                StudentNumberCounterLength = 6,
                 BillNumberPrefix = "BILL-",
                 PaymentNumberPrefix = "PAY-",
                 Currency = "PHP",
@@ -56,7 +57,8 @@ public class SystemSettingsService : ISystemSettingsService
         settings.SchoolLogoUrl = request.SchoolLogoUrl;
         settings.CurrentAcademicYearId = request.CurrentAcademicYearId;
         settings.OfficialReceiptPrefix = request.OfficialReceiptPrefix;
-        settings.StudentNumberPrefix = request.StudentNumberPrefix;
+        settings.StudentNumberPrefix = string.IsNullOrWhiteSpace(request.StudentNumberPrefix) ? "NAI" : request.StudentNumberPrefix;
+        settings.StudentNumberCounterLength = request.StudentNumberCounterLength > 0 ? request.StudentNumberCounterLength : 6;
         settings.BillNumberPrefix = request.BillNumberPrefix;
         settings.PaymentNumberPrefix = request.PaymentNumberPrefix;
         settings.Currency = request.Currency;
@@ -80,7 +82,8 @@ public class SystemSettingsService : ISystemSettingsService
             CurrentAcademicYearId = setting.CurrentAcademicYearId,
             CurrentAcademicYearName = setting.CurrentAcademicYear?.SchoolYear,
             OfficialReceiptPrefix = setting.OfficialReceiptPrefix,
-            StudentNumberPrefix = setting.StudentNumberPrefix,
+            StudentNumberPrefix = string.IsNullOrWhiteSpace(setting.StudentNumberPrefix) ? "NAI" : setting.StudentNumberPrefix,
+            StudentNumberCounterLength = setting.StudentNumberCounterLength > 0 ? setting.StudentNumberCounterLength : 6,
             BillNumberPrefix = setting.BillNumberPrefix,
             PaymentNumberPrefix = setting.PaymentNumberPrefix,
             Currency = setting.Currency,

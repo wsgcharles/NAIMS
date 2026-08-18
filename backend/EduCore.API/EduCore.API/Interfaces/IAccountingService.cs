@@ -16,8 +16,14 @@ public interface IAccountingService
     Task<StudentBillResponse?> GetBillByIdAsync(int id);
     Task<List<StudentBillResponse>> GetBillsByStudentIdAsync(int studentId);
 
+    // Queue & Applicant Assessment
+    Task<List<AccountingQueueItemDto>> GetAccountingQueueAsync(string? stage = null);
+    Task<StudentBillResponse> GenerateAssessmentForApplicationAsync(GenerateAssessmentRequest request, int? createdByUserId = null);
+    Task<StudentLedgerResponse> GetApplicationFinancialAccountAsync(int applicationId);
+
     // Payments & Receipts
     Task<PaymentResponse> ProcessPaymentAsync(ProcessPaymentRequest request);
+    Task<PaymentResponse> AdjustPaymentAsync(PaymentAdjustmentRequest request);
     Task<PaymentResponse?> GetPaymentByIdAsync(int id);
     Task<List<PaymentResponse>> GetPaymentsByStudentIdAsync(int studentId);
     Task<OfficialReceiptResponse?> GetReceiptByPaymentIdAsync(int paymentId);

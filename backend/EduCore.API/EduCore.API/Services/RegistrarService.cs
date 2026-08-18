@@ -10,10 +10,12 @@ namespace EduCore.API.Services;
 public class RegistrarService : IRegistrarService
 {
     private readonly EduCoreDbContext _context;
+    private readonly IAuditLogService _auditLogService;
 
-    public RegistrarService(EduCoreDbContext context)
+    public RegistrarService(EduCoreDbContext context, IAuditLogService auditLogService)
     {
         _context = context;
+        _auditLogService = auditLogService;
     }
 
     public async Task<List<StudentListResponse>> GetStudentsAsync()
@@ -223,6 +225,8 @@ public class RegistrarService : IRegistrarService
 
         await _context.SaveChangesAsync();
 
+        await _auditLogService.LogAsync("Student.Promote", "Student", request.StudentId.ToString(), history.Description);
+
         return true;
     }
 
@@ -267,6 +271,8 @@ public class RegistrarService : IRegistrarService
 
         await _context.SaveChangesAsync();
 
+        await _auditLogService.LogAsync("Student.Transfer", "Student", request.StudentId.ToString(), description);
+
         return true;
     }
 
@@ -309,6 +315,8 @@ public class RegistrarService : IRegistrarService
         _context.StudentHistories.Add(history);
 
         await _context.SaveChangesAsync();
+
+        await _auditLogService.LogAsync("Student.Graduate", "Student", request.StudentId.ToString(), description);
 
         return true;
     }

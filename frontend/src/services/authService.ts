@@ -5,6 +5,7 @@ import type {
   CurrentUser,
   ChangePasswordRequest,
   ForgotPasswordRequest,
+  VerifyResetCodeRequest,
   ResetPasswordRequest,
 } from '../types';
 
@@ -25,6 +26,10 @@ export const authService = {
 
   forgotPassword: async (data: ForgotPasswordRequest): Promise<void> => {
     await apiClient.post('/auth/forgot-password', data);
+  },
+
+  verifyResetCode: async (data: VerifyResetCodeRequest): Promise<void> => {
+    await apiClient.post('/auth/verify-reset-code', data);
   },
 
   resetPassword: async (data: ResetPasswordRequest): Promise<void> => {

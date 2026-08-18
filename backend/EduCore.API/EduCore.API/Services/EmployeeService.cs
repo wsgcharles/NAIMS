@@ -13,19 +13,22 @@ public class EmployeeService : IEmployeeService
     private readonly IPasswordService _passwordService;
     private readonly IPasswordPolicyService _passwordPolicyService;
     private readonly IEmailService _emailService;
+    private readonly IAuditLogService _auditLogService;
 
     public EmployeeService(
         EduCoreDbContext context,
         NumberGeneratorService numberGenerator,
         IPasswordService passwordService,
         IPasswordPolicyService passwordPolicyService,
-        IEmailService emailService)
+        IEmailService emailService,
+        IAuditLogService auditLogService)
     {
         _context = context;
         _numberGenerator = numberGenerator;
         _passwordService = passwordService;
         _passwordPolicyService = passwordPolicyService;
         _emailService = emailService;
+        _auditLogService = auditLogService;
     }
 
     public async Task<EmployeeResponse> CreateAsync(CreateEmployeeRequest request)
@@ -102,6 +105,8 @@ public class EmployeeService : IEmployeeService
 
         await _context.SaveChangesAsync();
 
+        await _auditLogService.LogAsync("Employee.Create", "Employee", employee.Id.ToString(), $"Created employee {employee.FirstName} {employee.LastName} ({employee.Position}).");
+
         // Queue Welcome Email
         await _emailService.QueueEmailAsync(
             user.Email,
@@ -121,6 +126,16 @@ public class EmployeeService : IEmployeeService
             Id = employee.Id,
             EmployeeNumber = employee.EmployeeNumber,
             FullName = $"{employee.FirstName} {employee.LastName}",
+            FirstName = employee.FirstName,
+            MiddleName = employee.MiddleName,
+            LastName = employee.LastName,
+            Suffix = employee.Suffix,
+            BirthDate = employee.BirthDate,
+            Gender = employee.Gender,
+            Address = employee.Address,
+            Barangay = employee.Barangay,
+            City = employee.City,
+            Province = employee.Province,
             Position = employee.Position,
             Department = employee.Department,
             Role = employee.Role.ToString(),
@@ -145,6 +160,16 @@ public class EmployeeService : IEmployeeService
                 Id = e.Id,
                 EmployeeNumber = e.EmployeeNumber,
                 FullName = $"{e.FirstName} {e.LastName}",
+                FirstName = e.FirstName,
+                MiddleName = e.MiddleName,
+                LastName = e.LastName,
+                Suffix = e.Suffix,
+                BirthDate = e.BirthDate,
+                Gender = e.Gender,
+                Address = e.Address,
+                Barangay = e.Barangay,
+                City = e.City,
+                Province = e.Province,
                 Position = e.Position,
                 Department = e.Department,
                 Role = e.Role.ToString(),
@@ -169,6 +194,16 @@ public class EmployeeService : IEmployeeService
             Id = employee.Id,
             EmployeeNumber = employee.EmployeeNumber,
             FullName = $"{employee.FirstName} {employee.LastName}",
+            FirstName = employee.FirstName,
+            MiddleName = employee.MiddleName,
+            LastName = employee.LastName,
+            Suffix = employee.Suffix,
+            BirthDate = employee.BirthDate,
+            Gender = employee.Gender,
+            Address = employee.Address,
+            Barangay = employee.Barangay,
+            City = employee.City,
+            Province = employee.Province,
             Position = employee.Position,
             Department = employee.Department,
             Role = employee.Role.ToString(),
@@ -225,11 +260,23 @@ public class EmployeeService : IEmployeeService
 
         await _context.SaveChangesAsync();
 
+        await _auditLogService.LogAsync("Employee.Update", "Employee", employee.Id.ToString(), $"Updated employee {employee.FirstName} {employee.LastName}.");
+
         return new EmployeeResponse
         {
             Id = employee.Id,
             EmployeeNumber = employee.EmployeeNumber,
             FullName = $"{employee.FirstName} {employee.LastName}",
+            FirstName = employee.FirstName,
+            MiddleName = employee.MiddleName,
+            LastName = employee.LastName,
+            Suffix = employee.Suffix,
+            BirthDate = employee.BirthDate,
+            Gender = employee.Gender,
+            Address = employee.Address,
+            Barangay = employee.Barangay,
+            City = employee.City,
+            Province = employee.Province,
             Position = employee.Position,
             Department = employee.Department,
             Role = employee.Role.ToString(),
@@ -258,6 +305,8 @@ public class EmployeeService : IEmployeeService
 
         await _context.SaveChangesAsync();
 
+        await _auditLogService.LogAsync("Employee.Delete", "Employee", id.ToString(), $"Deleted employee {employee.FirstName} {employee.LastName}.");
+
         return true;
     }
 
@@ -280,6 +329,8 @@ public class EmployeeService : IEmployeeService
         employee.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        await _auditLogService.LogAsync("Employee.ToggleStatus", "Employee", id.ToString(), $"Employee {employee.FirstName} {employee.LastName} set to {(employee.IsActive ? "Active" : "Inactive")}.");
 
         return true;
     }

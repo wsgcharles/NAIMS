@@ -7,7 +7,7 @@ namespace EduCore.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Accounting,Cashier,Administrator,SuperAdministrator")]
+[Authorize(Roles = "Accountant,Administrator,SuperAdministrator")]
 public class AccountingController : ControllerBase
 {
     private readonly IAccountingService _accountingService;
@@ -16,6 +16,50 @@ public class AccountingController : ControllerBase
     {
         _accountingService = accountingService;
     }
+
+    #region Queue & Application Assessment
+
+    [HttpGet("Queue")]
+    public async Task<IActionResult> GetAccountingQueue([FromQuery] string? stage)
+    {
+        var queue = await _accountingService.GetAccountingQueueAsync(stage);
+        return Ok(queue);
+    }
+
+    [HttpPost("Assessment/Generate")]
+    public async Task<IActionResult> GenerateAssessment([FromBody] GenerateAssessmentRequest request)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        try
+        {
+            var userIdClaim = User.FindFirst("UserId")?.Value;
+            int? userId = int.TryParse(userIdClaim, out var parsedId) ? parsedId : null;
+
+            var bill = await _accountingService.GenerateAssessmentForApplicationAsync(request, userId);
+            return Ok(bill);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("Ledger/Application/{applicationId}")]
+    public async Task<IActionResult> GetApplicationFinancialAccount(int applicationId)
+    {
+        try
+        {
+            var ledger = await _accountingService.GetApplicationFinancialAccountAsync(applicationId);
+            return Ok(ledger);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    #endregion
 
     #region School Fees Catalog
 
@@ -117,7 +161,23 @@ public class AccountingController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("Payments/Adjust")]
+    public async Task<IActionResult> AdjustPayment([FromBody] PaymentAdjustmentRequest request)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        try
+        {
+            var payment = await _accountingService.AdjustPaymentAsync(request);
+            return Ok(payment);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 

@@ -58,6 +58,12 @@ export const queryKeys = {
     sectionAssignments: ['admin', 'sectionAssignments'] as const,
     sections: ['admin', 'sections'] as const,
     academicYears: ['admin', 'academicYears'] as const,
+    activeAcademicYear: ['admin', 'academicYears', 'active'] as const,
+    academicPrograms: ['admin', 'academicPrograms'] as const,
+    announcements: ['admin', 'announcements'] as const,
+    auditLogs: ['admin', 'auditLogs'] as const,
+    reportsOverview: ['admin', 'reportsOverview'] as const,
+    gradeApprovals: ['admin', 'gradeApprovals'] as const,
   },
   finance: {
     dashboard: ['finance', 'dashboard'] as const,
