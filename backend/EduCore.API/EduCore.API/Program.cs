@@ -282,7 +282,15 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// HTTPS Redirection — enabled in Development only.
+// In Production on Render/Railway, TLS is terminated at the load balancer edge.
+// The container receives plain HTTP internally, so redirecting HTTP→HTTPS
+// inside the container causes an infinite redirect loop. Render provides HTTPS
+// to external clients automatically without any action inside the container.
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // Security Headers — applied to every response.
 // These headers defend against common web attacks at zero cost.

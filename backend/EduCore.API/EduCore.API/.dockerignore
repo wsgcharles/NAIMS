@@ -1,0 +1,23 @@
+# ─── EduCore API — .dockerignore ─────────────────────────────────────────────
+# Excludes files from the Docker build context.
+# Smaller context = faster builds and no accidental secret leakage into the image.
+
+# Build outputs — Docker produces these inside the container, not from the host.
+bin/
+obj/
+
+# User-uploaded student documents — never bake real personal data into an image.
+wwwroot/uploads/
+
+# Local secrets — must never enter a Docker image.
+appsettings.Development.json
+appsettings.json
+*.user
+
+# IDE and OS artifacts.
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.swp
