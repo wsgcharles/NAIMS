@@ -5,35 +5,42 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using System.Text;
+using System.Text.Json;
 
 namespace EduCore.API.Services;
 
 /// <summary>
-/// Production email service using MailKit — the correct .NET SMTP library.
+/// Production email service.
 ///
-/// WHY MailKit instead of System.Net.Mail.SmtpClient:
-///   - System.Net.Mail.SmtpClient has a known dispose-during-async bug that causes
-///     silent failures (it logs "sent successfully" but the TCP stream is torn down).
-///   - System.Net.Mail with EnableSsl=true on port 587 can behave unpredictably
-///     (it conflates SSL-wrapping with STARTTLS upgrade).
-///   - MailKit explicitly uses SecureSocketOptions.StartTls for port 587 (STARTTLS),
-///     which is what Gmail requires. Connection failures throw real exceptions.
-///   - MailKit exceptions bubble up correctly so the BackgroundWorker retry loop works.
+/// TWO send modes (selected automatically by configuration):
+///
+/// 1. BREVO HTTP API (preferred for cloud/Render):
+///    Uses Brevo's transactional email REST API over HTTPS port 443.
+///    Set SmtpSettings:BrevoApiKey to enable.
+///    Render free tier blocks outbound SMTP (port 587), but never blocks HTTPS.
+///
+/// 2. SMTP via MailKit (local development):
+///    Uses MailKit with STARTTLS on port 587.
+///    Used when BrevoApiKey is not configured.
 /// </summary>
 public class EmailService : IEmailService
 {
     private readonly SmtpSettings _smtpSettings;
     private readonly IEmailQueue _emailQueue;
     private readonly ILogger<EmailService> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public EmailService(
         IOptions<SmtpSettings> smtpOptions,
         IEmailQueue emailQueue,
-        ILogger<EmailService> logger)
+        ILogger<EmailService> logger,
+        IHttpClientFactory httpClientFactory)
     {
         _smtpSettings = smtpOptions.Value;
         _emailQueue = emailQueue;
         _logger = logger;
+        _httpClientFactory = httpClientFactory;
     }
 
     public Task QueueEmailAsync(string toEmail, string subject, string templateName, object viewModel)
@@ -54,27 +61,73 @@ public class EmailService : IEmailService
     }
 
     /// <summary>
-    /// Sends a raw HTML email directly via MailKit SMTP.
+    /// Sends a raw HTML email.
+    /// Routes to Brevo HTTP API or MailKit SMTP based on configuration.
     /// THROWS on failure — the caller (BackgroundWorker) handles retry logic.
     /// </summary>
     public async Task SendRawEmailAsync(string toEmail, string subject, string bodyHtml)
     {
-        // ── Diagnostic dump before attempting SMTP ────────────────────────────────
-        _logger.LogDebug(
-            "[EmailService] SMTP Config → Host={Host} | Port={Port} | Username={Username} | " +
-            "SenderEmail={SenderEmail} | SenderName={SenderName} | EnableSsl={EnableSsl}",
-            _smtpSettings.Host,
-            _smtpSettings.Port,
-            _smtpSettings.Username ?? "(null)",
-            _smtpSettings.SenderEmail,
-            _smtpSettings.SenderName,
-            _smtpSettings.EnableSsl);
-
         _logger.LogInformation(
             "[EmailService] Sending email → To={To} | Subject={Subject}",
             toEmail, subject);
 
-        // Validate essential config before even opening a socket
+        if (!string.IsNullOrWhiteSpace(_smtpSettings.BrevoApiKey))
+        {
+            await SendViaBrevoApiAsync(toEmail, subject, bodyHtml);
+        }
+        else
+        {
+            await SendViaSmtpAsync(toEmail, subject, bodyHtml);
+        }
+    }
+
+    // ── Brevo HTTP API ────────────────────────────────────────────────────────────
+    // Uses HTTPS port 443 — works on Render free tier (port 587 is blocked by Render).
+
+    private async Task SendViaBrevoApiAsync(string toEmail, string subject, string bodyHtml)
+    {
+        _logger.LogInformation("[EmailService] Using Brevo HTTP API → To={To}", toEmail);
+
+        var payload = new
+        {
+            sender = new { name = _smtpSettings.SenderName, email = _smtpSettings.SenderEmail },
+            to = new[] { new { email = toEmail } },
+            subject,
+            htmlContent = bodyHtml
+        };
+
+        var json = JsonSerializer.Serialize(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var client = _httpClientFactory.CreateClient("Brevo");
+        client.DefaultRequestHeaders.Clear();
+        client.DefaultRequestHeaders.Add("api-key", _smtpSettings.BrevoApiKey);
+        client.DefaultRequestHeaders.Add("accept", "application/json");
+
+        var response = await client.PostAsync("https://api.brevo.com/v3/smtp/email", content);
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError(
+                "[EmailService] Brevo API FAILED → Status={Status} | Body={Body}",
+                (int)response.StatusCode, responseBody);
+            throw new InvalidOperationException(
+                $"Brevo API returned {(int)response.StatusCode}: {responseBody}");
+        }
+
+        _logger.LogInformation(
+            "[EmailService] ✅ Email sent via Brevo API → To={To} | Subject={Subject}",
+            toEmail, subject);
+    }
+
+    // ── SMTP via MailKit ──────────────────────────────────────────────────────────
+    // Used for local development where port 587 is accessible.
+
+    private async Task SendViaSmtpAsync(string toEmail, string subject, string bodyHtml)
+    {
+        _logger.LogInformation("[EmailService] Using MailKit SMTP → Host={Host}:{Port}", _smtpSettings.Host, _smtpSettings.Port);
+
         if (string.IsNullOrWhiteSpace(_smtpSettings.Host))
             throw new InvalidOperationException("SMTP Host is not configured.");
         if (string.IsNullOrWhiteSpace(_smtpSettings.Username))
@@ -84,86 +137,60 @@ public class EmailService : IEmailService
         if (string.IsNullOrWhiteSpace(_smtpSettings.SenderEmail))
             throw new InvalidOperationException("SMTP SenderEmail is not configured.");
 
-        // ── Build MimeMessage ────────────────────────────────────────────────────
         var message = new MimeMessage();
-
         message.From.Add(new MailboxAddress(_smtpSettings.SenderName, _smtpSettings.SenderEmail));
         message.To.Add(MailboxAddress.Parse(toEmail));
         message.Subject = subject;
 
         if (!string.IsNullOrWhiteSpace(_smtpSettings.ReplyToAddress))
-        {
             message.ReplyTo.Add(MailboxAddress.Parse(_smtpSettings.ReplyToAddress));
-        }
 
-        message.Body = new TextPart("html")
-        {
-            Text = bodyHtml
-        };
+        message.Body = new TextPart("html") { Text = bodyHtml };
 
-        // ── Connect, authenticate, send via MailKit ──────────────────────────────
         using var client = new SmtpClient();
 
-        // SecureSocketOptions.StartTls = connect on port 587 with plain TCP,
-        // then upgrade to TLS via STARTTLS command. This is what Gmail port 587 requires.
-        // Do NOT use SslOnConnect (port 465) unless you change the port.
         var secureOption = _smtpSettings.EnableSsl
             ? SecureSocketOptions.StartTls
             : SecureSocketOptions.None;
 
-        _logger.LogDebug(
-            "[EmailService] Connecting to {Host}:{Port} with {SecureOption}...",
-            _smtpSettings.Host, _smtpSettings.Port, secureOption);
-
         try
         {
             await client.ConnectAsync(_smtpSettings.Host, _smtpSettings.Port, secureOption);
-            _logger.LogDebug("[EmailService] SMTP connection established.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "[EmailService] SMTP connection FAILED → Host={Host} Port={Port} | " +
-                "Error={Error} | InnerError={Inner}",
-                _smtpSettings.Host, _smtpSettings.Port,
-                ex.Message, ex.InnerException?.Message ?? "(none)");
-            throw; // propagate — triggers BackgroundWorker retry
+                "[EmailService] SMTP connection FAILED → Host={Host} Port={Port} | Error={Error} | InnerError={Inner}",
+                _smtpSettings.Host, _smtpSettings.Port, ex.Message, ex.InnerException?.Message ?? "(none)");
+            throw;
         }
 
         try
         {
             await client.AuthenticateAsync(_smtpSettings.Username, _smtpSettings.Password);
-            _logger.LogDebug(
-                "[EmailService] SMTP authenticated successfully as {Username}.",
-                _smtpSettings.Username);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "[EmailService] SMTP authentication FAILED for user {Username} | " +
-                "Error={Error} | InnerError={Inner}",
-                _smtpSettings.Username,
-                ex.Message, ex.InnerException?.Message ?? "(none)");
+                "[EmailService] SMTP authentication FAILED for user {Username} | Error={Error} | InnerError={Inner}",
+                _smtpSettings.Username, ex.Message, ex.InnerException?.Message ?? "(none)");
             await client.DisconnectAsync(true);
-            throw; // propagate — triggers BackgroundWorker retry
+            throw;
         }
 
         try
         {
             await client.SendAsync(message);
             _logger.LogInformation(
-                "[EmailService] ✅ Email sent successfully → To={To} | Subject={Subject}",
+                "[EmailService] ✅ Email sent via SMTP → To={To} | Subject={Subject}",
                 toEmail, subject);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "[EmailService] SMTP send FAILED → To={To} | Subject={Subject} | " +
-                "Error={Error} | InnerError={Inner} | StackTrace={Stack}",
-                toEmail, subject,
-                ex.Message, ex.InnerException?.Message ?? "(none)",
-                ex.StackTrace);
-            throw; // propagate — triggers BackgroundWorker retry
+                "[EmailService] SMTP send FAILED → To={To} | Subject={Subject} | Error={Error} | InnerError={Inner}",
+                toEmail, subject, ex.Message, ex.InnerException?.Message ?? "(none)");
+            throw;
         }
         finally
         {

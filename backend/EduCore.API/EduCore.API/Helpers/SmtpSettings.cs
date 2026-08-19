@@ -16,4 +16,11 @@ public class SmtpSettings
     public bool EnableSsl { get; set; } = true;
 
     public string? ReplyToAddress { get; set; }
+
+    /// <summary>
+    /// When set, EmailService uses Brevo's HTTP API (HTTPS port 443) instead of SMTP.
+    /// Required for cloud deployments (e.g. Render free tier) that block outbound port 587.
+    /// Get this from Brevo Dashboard → SMTP & API → API Keys.
+    /// </summary>
+    public string? BrevoApiKey { get; set; }
 }

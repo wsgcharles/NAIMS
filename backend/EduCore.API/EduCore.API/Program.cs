@@ -81,6 +81,7 @@ builder.Services.AddScoped<IReportsService, ReportsService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 
 // Email Subsystem & Background Worker
+builder.Services.AddHttpClient();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddSingleton<IEmailQueue, EmailQueue>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -366,18 +367,22 @@ static void ValidateConfiguration(IConfiguration configuration)
     else if (jwtKey.Length < 32)
         errors.Add($"Jwt:Key is too short ({jwtKey.Length} chars). Minimum 32 characters required for HS256.");
 
-    // SMTP — required for password reset and welcome emails.
-    var smtpPassword = configuration["SmtpSettings:Password"];
-    if (string.IsNullOrWhiteSpace(smtpPassword))
-        errors.Add("SmtpSettings:Password is missing. Set via: ASPNETCORE_SmtpSettings__Password");
-    else if (smtpPassword.StartsWith("SET_VIA_ENVIRONMENT"))
-        errors.Add("SmtpSettings:Password is still a placeholder. Set: ASPNETCORE_SmtpSettings__Password");
+    // SMTP or Brevo API — required for password reset and welcome emails.
+    var brevoApiKey = configuration["SmtpSettings:BrevoApiKey"];
+    if (string.IsNullOrWhiteSpace(brevoApiKey) || brevoApiKey.StartsWith("SET_VIA_ENVIRONMENT"))
+    {
+        var smtpPassword = configuration["SmtpSettings:Password"];
+        if (string.IsNullOrWhiteSpace(smtpPassword))
+            errors.Add("SmtpSettings:Password is missing (or provide SmtpSettings:BrevoApiKey). Set via: ASPNETCORE_SmtpSettings__Password or ASPNETCORE_SmtpSettings__BrevoApiKey");
+        else if (smtpPassword.StartsWith("SET_VIA_ENVIRONMENT"))
+            errors.Add("SmtpSettings:Password is still a placeholder. Set: ASPNETCORE_SmtpSettings__Password or ASPNETCORE_SmtpSettings__BrevoApiKey");
 
-    var smtpUsername = configuration["SmtpSettings:Username"];
-    if (string.IsNullOrWhiteSpace(smtpUsername))
-        errors.Add("SmtpSettings:Username is missing. Set via: ASPNETCORE_SmtpSettings__Username");
-    else if (smtpUsername.StartsWith("SET_VIA_ENVIRONMENT"))
-        errors.Add("SmtpSettings:Username is still a placeholder. Set: ASPNETCORE_SmtpSettings__Username");
+        var smtpUsername = configuration["SmtpSettings:Username"];
+        if (string.IsNullOrWhiteSpace(smtpUsername))
+            errors.Add("SmtpSettings:Username is missing. Set via: ASPNETCORE_SmtpSettings__Username");
+        else if (smtpUsername.StartsWith("SET_VIA_ENVIRONMENT"))
+            errors.Add("SmtpSettings:Username is still a placeholder. Set: ASPNETCORE_SmtpSettings__Username");
+    }
 
     var smtpSender = configuration["SmtpSettings:SenderEmail"];
     if (string.IsNullOrWhiteSpace(smtpSender))
