@@ -317,9 +317,13 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseRateLimiter();
-
+// CORS must be registered BEFORE the rate limiter.
+// If the rate limiter runs first and returns 429, it short-circuits the pipeline
+// before CORS can add Access-Control-Allow-Origin. The browser then reports a
+// "CORS error" instead of the real "429 Too Many Requests", hiding the actual cause.
 app.UseCors("AppCors");
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
